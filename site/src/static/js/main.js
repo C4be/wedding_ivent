@@ -359,55 +359,92 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // ============ RSVP Form ============
-    const rsvpForm = document.getElementById('rsvpForm');
-    const conditionalFields = document.getElementById('conditionalFields');
-    const attendingRadios = document.querySelectorAll('input[name="attending"]');
+    // ============ RSVP Form (consolidated) ============
+    // Remove duplicated declarations and handlers; keep a single, consistent implementation.
+    (function() {
+        const rsvpForm = document.getElementById('rsvpForm');
+        const conditionalFields = document.getElementById('conditionalFields');
+        const attendingRadios = Array.from(document.querySelectorAll('input[name="attending"]'));
 
-    attendingRadios.forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            if (e.target.value === 'yes') {
+        // Ensure conditional fields reflect current selection
+        function updateConditional() {
+            const checked = document.querySelector('input[name="attending"]:checked');
+            if (checked && checked.value === 'yes') {
+                // show using className used by CSS or inline style as fallback
                 conditionalFields.classList.add('show');
+                conditionalFields.style.display = '';
             } else {
                 conditionalFields.classList.remove('show');
+                conditionalFields.style.display = 'none';
             }
-        });
-    });
-
-    rsvpForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const formData = new FormData(rsvpForm);
-        const data = {
-            first_name: formData.get('first_name'),
-            last_name: formData.get('last_name'),
-            contact: formData.get('contact'),
-            attending: formData.get('attending') === 'yes',
-            guests_count: formData.get('guests_count') || 1,
-            children: formData.get('children') || '',
-            food_preferences: formData.get('food_preferences') || ''
-        };
-
-        try {
-            const response = await fetch('/api/rsvp', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-
-            const result = await response.json();
-            
-            if (result.status === 'success') {
-                showToast('Спасибо! Ваш ответ отправлен 💕', 'success');
-                rsvpForm.reset();
-                conditionalFields.classList.remove('show');
-            } else {
-                showToast('Ошибка при отправке. Попробуйте позже.', 'error');
-            }
-        } catch (error) {
-            showToast('Ошибка сети. Проверьте подключение.', 'error');
         }
-    });
+
+        attendingRadios.forEach(radio => {
+            radio.addEventListener('change', updateConditional);
+        });
+        updateConditional();
+
+        // Single toast implementation (type can be 'success' or 'error')
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+            const toastMessage = toast.querySelector('.toast-message');
+            toastMessage.textContent = message;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => toast.classList.remove('show'), 4000);
+        }
+
+        // Submit handler: serialize form to JSON and POST (send attending as "yes"/"no")
+        if (rsvpForm) {
+            rsvpForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const formData = new FormData(rsvpForm);
+
+                // Build payload matching server expectations (phone + telegram)
+                const payload = {
+                    first_name: formData.get('first_name') || '',
+                    last_name: formData.get('last_name') || '',
+                    phone: formData.get('phone') || '',
+                    telegram: formData.get('telegram') || '',
+                    attending: formData.get('attending') || '', // keep as "yes" or "no"
+                    guests_count: formData.get('guests_count') || 1,
+                    children: formData.get('children') || '',
+                    food_preferences: formData.get('food_preferences') || ''
+                };
+
+                // Basic client-side validation
+                if (!payload.attending) {
+                    showToast('Пожалуйста, укажите, придёте ли вы.', 'error');
+                    return;
+                }
+                if (!payload.phone || !payload.telegram) {
+                    showToast('Телефон и Telegram обязательны.', 'error');
+                    return;
+                }
+
+                try {
+                    const resp = await fetch('/api/rsvp', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const json = await resp.json().catch(() => ({}));
+
+                    if (resp.ok && json.status === 'success') {
+                        showToast(json.message || 'Анкета отправлена', 'success');
+                        rsvpForm.reset();
+                        updateConditional();
+                    } else {
+                        showToast(json.message || 'Ошибка при отправке.', 'error');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast('Ошибка сети. Попробуйте позже.', 'error');
+                }
+            });
+        }
+    })();
 
     // ============ Question Form ============
     const questionForm = document.getElementById('questionForm');

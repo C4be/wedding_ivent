@@ -22,6 +22,7 @@ def save_config(config):
     with open(CONFIG_PATH, 'w', encoding='utf-8') as f:
         json.dump(config, f, ensure_ascii=False, indent=2)
 
+
 @app.route('/')
 def index():
     config = load_config()
@@ -61,17 +62,30 @@ def update_section(section):
 def submit_rsvp():
     """Submit RSVP form to Telegram bot"""
     try:
-        data = request.json
+        data = request.json or {}
         config = load_config()
         
+        # Extract contacts (form now has separate phone and telegram fields)
+        phone = data.get('phone', '').strip()
+        telegram_contact = data.get('telegram', '').strip()
+        
+        # Basic validation
+        if not phone or not telegram_contact:
+            return jsonify({"status": "error", "message": "Phone and Telegram are required"}), 400
+        
+        # Determine attendance (form radios send "yes" or "no")
+        attending_value = data.get('attending')
+        is_attending = True if str(attending_value).lower() == 'yes' else False
+        
         # Format message for Telegram
+        contact_display = f"Телефон: {phone}\nTelegram: {telegram_contact}"
         message = f"""
 🎊 *Новая анкета гостя!*
 
 👤 *Имя:* {data.get('first_name', 'Не указано')}
 👤 *Фамилия:* {data.get('last_name', 'Не указано')}
-📱 *Контакт:* {data.get('contact', 'Не указано')}
-✅ *Статус:* {'Буду' if data.get('attending') else 'Не смогу'}
+📱 *Контакт:* {contact_display}
+✅ *Статус:* {'Буду' if is_attending else 'Не смогу'}
 👥 *Количество гостей:* {data.get('guests_count', 1)}
 👶 *Дети:* {data.get('children', 'Нет')}
 🍽 *Пожелания по еде:* {data.get('food_preferences', 'Нет')}
