@@ -12,6 +12,7 @@ CORS(app)
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), '..', 'materials', 'site.info.json')
 IMAGES_PATH = os.path.join(os.path.dirname(__file__), '..', 'materials', 'imgs')
+SLIDER_PATH = os.path.join(os.path.dirname(__file__), 'static', 'images', 'slider')
 
 def load_config():
     with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
@@ -171,6 +172,24 @@ def add_faq():
         return jsonify({"status": "success", "message": "FAQ added"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/slider-images', methods=['GET'])
+def get_slider_images():
+    """Get images from slider folder"""
+    try:
+        images = []
+        if os.path.exists(SLIDER_PATH):
+            allowed_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
+            for filename in sorted(os.listdir(SLIDER_PATH)):
+                ext = os.path.splitext(filename)[1].lower()
+                if ext in allowed_extensions:
+                    images.append({
+                        'url': f'/static/images/slider/{filename}',
+                        'filename': filename
+                    })
+        return jsonify(images)
+    except Exception as e:
+        return jsonify([])
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

@@ -14,6 +14,9 @@
     <!-- AOS Animation Library -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     
+    <!-- Yandex Maps API -->
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=your-api-key&lang=ru_RU"></script>
+    
     <!-- Styles -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
@@ -91,6 +94,23 @@
                 <div class="section-divider">
                     <span>💕</span>
                 </div>
+                
+                <!-- Image Slider -->
+                <div class="story-slider" data-aos="fade-up">
+                    <div class="slider-container">
+                        <div class="slider-track" id="sliderTrack">
+                            <!-- Images will be loaded dynamically -->
+                        </div>
+                    </div>
+                    <button class="slider-btn slider-btn-prev" id="sliderPrev" aria-label="Previous">
+                        <span>❮</span>
+                    </button>
+                    <button class="slider-btn slider-btn-next" id="sliderNext" aria-label="Next">
+                        <span>❯</span>
+                    </button>
+                    <div class="slider-dots" id="sliderDots"></div>
+                </div>
+                
                 <p class="story-text">{{ config.story.text }}</p>
             </div>
         </div>
@@ -104,17 +124,52 @@
                 <span>📅</span>
             </div>
             
-            <div class="timeline-items">
-                {% for item in config.event.timeline %}
-                <div class="timeline-item" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
-                    <div class="timeline-icon">{{ item.icon }}</div>
-                    <div class="timeline-time">{{ item.time }}</div>
-                    <div class="timeline-info">
-                        <h3>{{ item.title }}</h3>
-                        <p>{{ item.description }}</p>
+            <!-- Day Tabs -->
+            <div class="timeline-tabs" data-aos="fade-up">
+                <button class="timeline-tab active" data-day="1">
+                    <span class="tab-icon">🎊</span>
+                    <span class="tab-text">День 1</span>
+                    <span class="tab-date">8 августа</span>
+                </button>
+                <button class="timeline-tab" data-day="2">
+                    <span class="tab-icon">🌿</span>
+                    <span class="tab-text">День 2</span>
+                    <span class="tab-date">9 августа</span>
+                </button>
+            </div>
+            
+            <!-- Day 1 Timeline -->
+            <div class="timeline-content active" id="timeline-day-1">
+                <h3 class="timeline-day-title" data-aos="fade-up">{{ config.event.timeline_day1.title }}</h3>
+                <div class="timeline-items">
+                    {% for item in config.event.timeline_day1.events %}
+                    <div class="timeline-item" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
+                        <div class="timeline-icon">{{ item.icon }}</div>
+                        <div class="timeline-time">{{ item.time }}</div>
+                        <div class="timeline-info">
+                            <h3>{{ item.title }}</h3>
+                            <p>{{ item.description }}</p>
+                        </div>
                     </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
+            </div>
+            
+            <!-- Day 2 Timeline -->
+            <div class="timeline-content" id="timeline-day-2">
+                <h3 class="timeline-day-title" data-aos="fade-up">{{ config.event.timeline_day2.title }}</h3>
+                <div class="timeline-items">
+                    {% for item in config.event.timeline_day2.events %}
+                    <div class="timeline-item" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
+                        <div class="timeline-icon">{{ item.icon }}</div>
+                        <div class="timeline-time">{{ item.time }}</div>
+                        <div class="timeline-info">
+                            <h3>{{ item.title }}</h3>
+                            <p>{{ item.description }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
             
             <p class="timeline-note" data-aos="fade-up">
@@ -136,8 +191,44 @@
                     <h3 class="location-name">{{ config.location.name }}</h3>
                     <p class="location-address">{{ config.location.address }}</p>
                     
+                    <!-- Location Cards -->
+                    <div class="location-cards">
+                        <div class="location-card" data-location="day1_venue" data-lat="{{ config.locations.day1_venue.coordinates.lat }}" data-lng="{{ config.locations.day1_venue.coordinates.lng }}">
+                            <span class="location-card-icon">🎊</span>
+                            <div class="location-card-info">
+                                <strong>День 1</strong>
+                                <span>{{ config.locations.day1_venue.name }}</span>
+                            </div>
+                            <span class="location-card-arrow">→</span>
+                        </div>
+                        <div class="location-card" data-location="day2_venue" data-lat="{{ config.locations.day2_venue.coordinates.lat }}" data-lng="{{ config.locations.day2_venue.coordinates.lng }}">
+                            <span class="location-card-icon">🌿</span>
+                            <div class="location-card-info">
+                                <strong>День 2</strong>
+                                <span>{{ config.locations.day2_venue.name }}</span>
+                            </div>
+                            <span class="location-card-arrow">→</span>
+                        </div>
+                        <div class="location-card" data-location="airport" data-lat="{{ config.locations.airport.coordinates.lat }}" data-lng="{{ config.locations.airport.coordinates.lng }}">
+                            <span class="location-card-icon">✈️</span>
+                            <div class="location-card-info">
+                                <strong>Аэропорт</strong>
+                                <span>{{ config.locations.airport.name }}</span>
+                            </div>
+                            <span class="location-card-arrow">→</span>
+                        </div>
+                        <div class="location-card" data-location="railway" data-lat="{{ config.locations.railway.coordinates.lat }}" data-lng="{{ config.locations.railway.coordinates.lng }}">
+                            <span class="location-card-icon">🚂</span>
+                            <div class="location-card-info">
+                                <strong>ЖД вокзал</strong>
+                                <span>{{ config.locations.railway.name }}</span>
+                            </div>
+                            <span class="location-card-arrow">→</span>
+                        </div>
+                    </div>
+                    
                     <div class="location-actions">
-                        <a href="{{ config.location.map_link }}" target="_blank" class="btn btn-outline">
+                        <a href="https://yandex.ru/maps/?pt={{ config.locations.day1_venue.coordinates.lng }},{{ config.locations.day1_venue.coordinates.lat }}&z=14&l=map" target="_blank" class="btn btn-outline">
                             Открыть карту
                         </a>
                         <a href="https://www.aviasales.ru" target="_blank" class="btn btn-outline">
@@ -150,13 +241,31 @@
                 </div>
                 
                 <div class="location-map" data-aos="fade-left">
-                    <iframe 
-                        src="https://yandex.ru/map-widget/v1/?ll={{ config.location.coordinates.lng }}%2C{{ config.location.coordinates.lat }}&z=15&pt={{ config.location.coordinates.lng }},{{ config.location.coordinates.lat }},pm2rdm"
-                        width="100%" 
-                        height="400" 
-                        frameborder="0"
-                        allowfullscreen>
-                    </iframe>
+                    <div id="yandexMap" style="width: 100%; height: 450px;"></div>
+                    
+                    <!-- Map Legend -->
+                    <div class="map-legend">
+                        <div class="legend-item" data-location="city">
+                            <span class="legend-color" style="background: #1e98ff;"></span>
+                            <span>г. Гай</span>
+                        </div>
+                        <div class="legend-item" data-location="day1_venue">
+                            <span class="legend-color" style="background: #ff4433;"></span>
+                            <span>День 1</span>
+                        </div>
+                        <div class="legend-item" data-location="day2_venue">
+                            <span class="legend-color" style="background: #56db40;"></span>
+                            <span>День 2</span>
+                        </div>
+                        <div class="legend-item" data-location="airport">
+                            <span class="legend-color" style="background: #ffb833;"></span>
+                            <span>Аэропорт</span>
+                        </div>
+                        <div class="legend-item" data-location="railway">
+                            <span class="legend-color" style="background: #b832fc;"></span>
+                            <span>ЖД вокзал</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -345,7 +454,44 @@
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
         const CONFIG = {
-            eventDate: "{{ config.event.date }}T16:00:00"
+            eventDate: "{{ config.event.date }}T15:00:00",
+            locations: {
+                city: {
+                    name: "{{ config.locations.city.name }}",
+                    address: "{{ config.locations.city.address }}",
+                    lat: {{ config.locations.city.coordinates.lat }},
+                    lng: {{ config.locations.city.coordinates.lng }},
+                    color: "#1e98ff"
+                },
+                day1_venue: {
+                    name: "{{ config.locations.day1_venue.name }}",
+                    address: "{{ config.locations.day1_venue.address }}",
+                    lat: {{ config.locations.day1_venue.coordinates.lat }},
+                    lng: {{ config.locations.day1_venue.coordinates.lng }},
+                    color: "#ff4433"
+                },
+                day2_venue: {
+                    name: "{{ config.locations.day2_venue.name }}",
+                    address: "{{ config.locations.day2_venue.address }}",
+                    lat: {{ config.locations.day2_venue.coordinates.lat }},
+                    lng: {{ config.locations.day2_venue.coordinates.lng }},
+                    color: "#56db40"
+                },
+                airport: {
+                    name: "{{ config.locations.airport.name }}",
+                    address: "{{ config.locations.airport.address }}",
+                    lat: {{ config.locations.airport.coordinates.lat }},
+                    lng: {{ config.locations.airport.coordinates.lng }},
+                    color: "#ffb833"
+                },
+                railway: {
+                    name: "{{ config.locations.railway.name }}",
+                    address: "{{ config.locations.railway.address }}",
+                    lat: {{ config.locations.railway.coordinates.lat }},
+                    lng: {{ config.locations.railway.coordinates.lng }},
+                    color: "#b832fc"
+                }
+            }
         };
     </script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
