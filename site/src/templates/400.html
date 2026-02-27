@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ошибка 400 — Мы уже исправляем</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    /* Небольшие локальные правки для карточки ошибки */
+    body { background: linear-gradient(180deg,#FAF8F5,#F3EEE9); display:flex;align-items:center;justify-content:center;height:100vh;padding:24px; }
+    .error-card { width:100%; max-width:820px; border-radius:14px; padding:28px; box-shadow: 0 12px 40px rgba(0,0,0,0.08); background:var(--color-bg-alt); }
+    .error-badge { width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,#ff7a7a,#ffb3b3);display:flex;align-items:center;justify-content:center;font-weight:700;color:#081021;margin-right:16px }
+    .error-head { display:flex;align-items:center;gap:12px;margin-bottom:12px }
+    .error-lead { color:var(--color-text-muted); margin-bottom:14px }
+    .error-container { background:rgba(0,0,0,0.03); padding:14px;border-radius:10px;cursor:pointer; user-select:text; border:1px solid rgba(0,0,0,0.04) }
+    .error-title { display:flex;justify-content:space-between;align-items:center }
+    .error-toggle { font-size:13px;color:var(--color-text-muted) }
+    pre.error-text { margin:10px 0 0; background:transparent; border:none; color:var(--color-text); overflow:hidden; max-height:0; transition:max-height .32s cubic-bezier(.2,.9,.2,1),opacity .2s; opacity:0 }
+    pre.error-text.show { max-height:360px; padding-top:10px; opacity:1; overflow:auto; border-top:1px solid rgba(0,0,0,0.04); margin-top:12px }
+    pre.error-text code{ white-space:pre-wrap; word-break:break-word; color: #2C3E50 }
+    footer { margin-top:16px; text-align:right }
+    a.retry { color: var(--color-primary); text-decoration:none; font-size:13px }
+    @media (max-width:520px){ .error-card{ padding:18px } }
+  </style>
+</head>
+<body>
+  <main class="error-card" role="main" aria-labelledby="heading">
+    <div class="error-head">
+      <div class="error-badge">400</div>
+      <div>
+        <h1 id="heading" style="margin:0;font-size:20px">Неверный запрос (400)</h1>
+        <p class="error-lead">Мы уже фиксируем это. Пожалуйста, зайдите позже — всё будет в порядке.</p>
+      </div>
+    </div>
+
+    <div class="hint" style="font-size:13px;color:var(--color-text-muted);margin-bottom:12px">Ниже — подробности ошибки. Нажмите по блоку, чтобы развернуть; ещё раз — чтобы скрыть.</div>
+
+    <div class="error-container" id="errorContainer" tabindex="0" role="button" aria-pressed="false" aria-label="Показать подробности ошибки">
+      <div class="error-title">
+        <div style="font-size:13px;color:var(--color-text-muted)">Подробности ошибки (нажмите для показа)</div>
+        <div class="error-toggle" id="toggleLabel">Показать</div>
+      </div>
+      <pre class="error-text" id="errorText" aria-hidden="true"><code id="errorCode">{{ error_text or 'Подробный текст ошибки не передан. Для теста добавьте ?error=...' }}</code></pre>
+    </div>
+
+    <footer>
+      <a class="retry" href="{{ url_for('index') }}">Вернуться на главную</a>
+    </footer>
+  </main>
+
+  <script>
+    (function(){
+      const container = document.getElementById('errorContainer');
+      const text = document.getElementById('errorText');
+      const code = document.getElementById('errorCode');
+      const toggleLabel = document.getElementById('toggleLabel');
+
+      // Если текст ошибки URL-закодирован (в тестовом маршруте /400?error=...), декодируем
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const err = params.get('error');
+        if(err && (!code.textContent || code.textContent.indexOf('Подробный') === 0)) {
+          code.textContent = decodeURIComponent(err);
+        }
+      } catch(e){ /* ignore */ }
+
+      let shown = false;
+      function setState(show){
+        shown = !!show;
+        if(shown){
+          text.classList.add('show');
+          text.setAttribute('aria-hidden','false');
+          container.setAttribute('aria-pressed','true');
+          toggleLabel.textContent = 'Скрыть';
+        } else {
+          text.classList.remove('show');
+          text.setAttribute('aria-hidden','true');
+          container.setAttribute('aria-pressed','false');
+          toggleLabel.textContent = 'Показать';
+        }
+      }
+
+      container.addEventListener('click', function(e){
+        if(e.target.tagName.toLowerCase() === 'a') return;
+        setState(!shown);
+      });
+
+      container.addEventListener('keydown', function(e){
+        if(e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          setState(!shown);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -205,5 +205,24 @@ def get_slider_images():
     except Exception as e:
         return jsonify([])
 
+@app.errorhandler(400)
+def bad_request(error):
+    """
+    Render a friendly 400 page.
+    Prefer explicit ?error=... query parameter when available (useful for testing).
+    """
+    err_text = request.args.get('error')
+    if not err_text:
+        err_text = getattr(error, 'description', None) or str(error)
+    return render_template('400.html', error_text=err_text), 400
+
+@app.route('/400')
+def show_400():
+    """
+    Test route: open /400?error=Some%20text to preview the 400 page.
+    """
+    err_text = request.args.get('error', '')
+    return render_template('400.html', error_text=err_text), 400
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
