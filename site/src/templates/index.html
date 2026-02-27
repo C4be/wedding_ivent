@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ config.meta.title }}</title>
+    <meta name="description" content="{{ config.meta.description }}">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- AOS Animation Library -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+        <span class="icon-sun">☀️</span>
+        <span class="icon-moon">🌙</span>
+    </button>
+
+    <!-- Header & Hero -->
+    <header class="hero" id="home">
+        <div class="hero-overlay"></div>
+        <div class="hero-content" data-aos="fade-up" data-aos-duration="1200">
+            <p class="hero-subtitle">Приглашаем вас на нашу свадьбу</p>
+            <h1 class="hero-title">
+                <span class="name">{{ config.couple.groom }}</span>
+                <span class="ampersand">&</span>
+                <span class="name">{{ config.couple.bride }}</span>
+            </h1>
+            <p class="hero-date">{{ config.event.date_display }}</p>
+            
+            <!-- Countdown Timer -->
+            <div class="countdown" id="countdown">
+                <div class="countdown-item">
+                    <span class="countdown-value" id="days">00</span>
+                    <span class="countdown-label">дней</span>
+                </div>
+                <div class="countdown-item">
+                    <span class="countdown-value" id="hours">00</span>
+                    <span class="countdown-label">часов</span>
+                </div>
+                <div class="countdown-item">
+                    <span class="countdown-value" id="minutes">00</span>
+                    <span class="countdown-label">минут</span>
+                </div>
+                <div class="countdown-item">
+                    <span class="countdown-value" id="seconds">00</span>
+                    <span class="countdown-label">секунд</span>
+                </div>
+            </div>
+            
+            <a href="#rsvp" class="btn btn-primary hero-cta">Подтвердить участие</a>
+        </div>
+        
+        <div class="scroll-indicator">
+            <span></span>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav" id="nav">
+        <div class="nav-container">
+            <a href="#home" class="nav-logo">{{ config.couple.groom[0] }} & {{ config.couple.bride[0] }}</a>
+            <button class="nav-toggle" id="navToggle" aria-label="Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="#story">Наша история</a></li>
+                <li><a href="#timeline">Программа</a></li>
+                <li><a href="#location">Место</a></li>
+                <li><a href="#faq">FAQ</a></li>
+                <li><a href="#rsvp">Анкета</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Story Section -->
+    <section class="section story" id="story">
+        <div class="container">
+            <div class="story-content" data-aos="fade-up">
+                <h2 class="section-title">{{ config.story.title }}</h2>
+                <div class="section-divider">
+                    <span>💕</span>
+                </div>
+                <p class="story-text">{{ config.story.text }}</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Timeline Section -->
+    <section class="section timeline" id="timeline">
+        <div class="container">
+            <h2 class="section-title" data-aos="fade-up">Программа дня</h2>
+            <div class="section-divider" data-aos="fade-up">
+                <span>📅</span>
+            </div>
+            
+            <div class="timeline-items">
+                {% for item in config.event.timeline %}
+                <div class="timeline-item" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
+                    <div class="timeline-icon">{{ item.icon }}</div>
+                    <div class="timeline-time">{{ item.time }}</div>
+                    <div class="timeline-info">
+                        <h3>{{ item.title }}</h3>
+                        <p>{{ item.description }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <p class="timeline-note" data-aos="fade-up">
+                ⚠️ {{ config.event.ceremony_note }}
+            </p>
+        </div>
+    </section>
+
+    <!-- Location Section -->
+    <section class="section location" id="location">
+        <div class="container">
+            <h2 class="section-title" data-aos="fade-up">Место проведения</h2>
+            <div class="section-divider" data-aos="fade-up">
+                <span>📍</span>
+            </div>
+            
+            <div class="location-content">
+                <div class="location-info" data-aos="fade-right">
+                    <h3 class="location-name">{{ config.location.name }}</h3>
+                    <p class="location-address">{{ config.location.address }}</p>
+                    
+                    <div class="location-actions">
+                        <a href="{{ config.location.map_link }}" target="_blank" class="btn btn-outline">
+                            Открыть карту
+                        </a>
+                        <a href="https://www.aviasales.ru" target="_blank" class="btn btn-outline">
+                            ✈️ Авиабилеты
+                        </a>
+                        <a href="https://www.rzd.ru" target="_blank" class="btn btn-outline">
+                            🚂 РЖД
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="location-map" data-aos="fade-left">
+                    <iframe 
+                        src="https://yandex.ru/map-widget/v1/?ll={{ config.location.coordinates.lng }}%2C{{ config.location.coordinates.lat }}&z=15&pt={{ config.location.coordinates.lng }},{{ config.location.coordinates.lat }},pm2rdm"
+                        width="100%" 
+                        height="400" 
+                        frameborder="0"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dresscode Section -->
+    <section class="section dresscode" id="dresscode">
+        <div class="container">
+            <div class="dresscode-content" data-aos="fade-up">
+                <h2 class="section-title">{{ config.dresscode.title }}</h2>
+                <div class="section-divider">
+                    <span>👗</span>
+                </div>
+                <p class="dresscode-text">{{ config.dresscode.text }}</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="section faq" id="faq">
+        <div class="container">
+            <h2 class="section-title" data-aos="fade-up">Частые вопросы</h2>
+            <div class="section-divider" data-aos="fade-up">
+                <span>❓</span>
+            </div>
+            
+            <div class="faq-list">
+                {% for item in config.faq %}
+                <div class="faq-item" data-aos="fade-up" data-aos-delay="{{ loop.index * 50 }}">
+                    <button class="faq-question">
+                        {{ item.question }}
+                        <span class="faq-icon">+</span>
+                    </button>
+                    <div class="faq-answer">
+                        <p>{{ item.answer }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- RSVP Section -->
+    <section class="section rsvp" id="rsvp">
+        <div class="container">
+            <h2 class="section-title" data-aos="fade-up">Подтвердите участие</h2>
+            <div class="section-divider" data-aos="fade-up">
+                <span>💌</span>
+            </div>
+            
+            <form class="rsvp-form" id="rsvpForm" data-aos="fade-up">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="firstName">Имя *</label>
+                        <input type="text" id="firstName" name="first_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Фамилия *</label>
+                        <input type="text" id="lastName" name="last_name" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="contact">Телефон или Telegram *</label>
+                    <input type="text" id="contact" name="contact" required placeholder="+7 (999) 123-45-67">
+                </div>
+                
+                <div class="form-group">
+                    <label>Вы придёте? *</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="attending" value="yes" required>
+                            <span class="radio-custom"></span>
+                            ✅ Буду с радостью!
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="attending" value="no">
+                            <span class="radio-custom"></span>
+                            ❌ К сожалению, не смогу
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-group conditional-fields" id="conditionalFields">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="guestsCount">Количество гостей (включая вас)</label>
+                            <select id="guestsCount" name="guests_count">
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5+</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="children">Дети (имена и возраст)</label>
+                            <input type="text" id="children" name="children" placeholder="Например: Маша (5 лет)">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="foodPreferences">Пожелания по еде (аллергии, веганство)</label>
+                        <textarea id="foodPreferences" name="food_preferences" rows="3" placeholder="Укажите, если есть особые предпочтения"></textarea>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block">Отправить</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Questions Section -->
+    <section class="section questions" id="questions">
+        <div class="container">
+            <h2 class="section-title" data-aos="fade-up">Остались вопросы?</h2>
+            <div class="section-divider" data-aos="fade-up">
+                <span>💬</span>
+            </div>
+            
+            <form class="question-form" id="questionForm" data-aos="fade-up">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="qName">Ваше имя</label>
+                        <input type="text" id="qName" name="name">
+                    </div>
+                    <div class="form-group">
+                        <label for="qContact">Контакт для ответа</label>
+                        <input type="text" id="qContact" name="contact" placeholder="Telegram или телефон">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="question">Ваш вопрос *</label>
+                    <textarea id="question" name="question" rows="4" required placeholder="Напишите ваш вопрос..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-outline btn-block">Отправить вопрос</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Gallery Section (for future photos) -->
+    <section class="section gallery" id="gallery" style="display: none;">
+        <div class="container">
+            <h2 class="section-title" data-aos="fade-up">Фотографии</h2>
+            <div class="section-divider" data-aos="fade-up">
+                <span>📸</span>
+            </div>
+            <div class="gallery-grid" id="galleryGrid">
+                <!-- Photos will be loaded dynamically -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    {{ config.couple.groom }} & {{ config.couple.bride }}
+                </div>
+                <p class="footer-date">{{ config.event.date_display }}</p>
+                
+                <div class="footer-contacts">
+                    <p>Организатор: {{ config.contacts.organizer_name }}</p>
+                    <p>{{ config.contacts.organizer_phone }}</p>
+                    <a href="https://t.me/{{ config.contacts.telegram[1:] }}" target="_blank">{{ config.contacts.telegram }}</a>
+                </div>
+                
+                {% if config.contacts.telegram_channel %}
+                <a href="{{ config.contacts.telegram_channel }}" target="_blank" class="btn btn-outline btn-sm">
+                    Telegram-канал свадьбы
+                </a>
+                {% endif %}
+                
+                <p class="footer-hashtag">{{ config.couple.hashtag }}</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <span class="toast-message"></span>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        const CONFIG = {
+            eventDate: "{{ config.event.date }}T16:00:00"
+        };
+    </script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
