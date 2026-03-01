@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
 
   db:
@@ -20,10 +18,29 @@ services:
     networks:
       - app_net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_PASSWORD} -h localhost || exit 1"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_DATABASE} -h localhost || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
+
+  db_service:
+    build: ./database_service
+    container_name: wedding-db-service
+    env_file:
+      - ./database_service/.env
+    environment:
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_HOST=wedding-db
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app_net
+    restart: unless-stopped
 
   wedding-site:
     build: ./site

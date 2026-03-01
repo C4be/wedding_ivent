@@ -70,3 +70,23 @@ wedding_ivent/
 1. Поместите фото в `site/src/static/images/`
 2. Обновите `site.info.json` с именами файлов
 3. Для hero-изображения: `hero.jpg`
+
+# Запуск БД
+
+Для того, чтобы запустить БД нужно запустить командой
+
+```bash
+docker-compose --env-file ./database_service/.env up -d --build db
+```
+
+Проверить настроечные файлы 
+
+```bash
+docker exec -it wedding-db ls -la /docker-entrypoint-initdb.d
+```
+
+# Запуск DB_SERVICE
+
+```bash
+docker-compose --env-file ./database_service/.env up -d db_service --build
+```

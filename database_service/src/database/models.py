@@ -24,11 +24,12 @@ class Member(Base):
     is_main_account = Column(Boolean, nullable=False)
     is_going_on_event = Column(Boolean, nullable=False)
 
-    # self-referential: один главный -> много дочерних
-    family_members = relationship(
+    # many-to-one: эта запись -> её head_member (remote_side указывает на колонку id родителя)
+    head_member = relationship(
         "Member",
+        remote_side=[id],
         foreign_keys=[main_account],
-        backref="head_member",
+        backref="family_members",
         lazy="select",
     )
 
