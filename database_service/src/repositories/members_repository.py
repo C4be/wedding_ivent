@@ -142,6 +142,23 @@ class MembersRepository:
         result = await self.session.execute(stmt)
         return result.scalar_one()
 
+    # helper: найти участника по tg_username
+    async def get_member_by_tg_username(self, tg_username: str) -> Optional[Member]:
+        result = await self.session.execute(
+            select(Member).where(Member.tg_username == tg_username)
+        )
+        return result.scalar_one_or_none()
+
+    # helper: найти участника по имени и фамилии
+    async def get_member_by_name(self, first_name: str, second_name: str) -> Optional[Member]:
+        result = await self.session.execute(
+            select(Member).where(
+                Member.first_name == first_name,
+                Member.second_name == second_name,
+            )
+        )
+        return result.scalars().first()
+
 async def get_members_repository(
     db: AsyncSession = Depends(get_async_session),
 ) -> AsyncGenerator[MembersRepository, None]:

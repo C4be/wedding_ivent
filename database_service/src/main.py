@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.db import init_db_create_all, get_async_session
 from routers.members_router import router as members_router
+from routers.wishes_router import router as wishes_router
 
 
 @asynccontextmanager
@@ -13,6 +14,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await init_db_create_all()
 
     app.include_router(members_router)
+    app.include_router(wishes_router)
 
     try:
         yield
@@ -31,4 +33,4 @@ def create_app() -> FastAPI:
     return app
 
 
-app = create_app()        
+app = create_app()
