@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, ConfigDict
 import re
 from typing import Optional
 
@@ -9,6 +9,7 @@ class MemberCreate(BaseModel):
     phone_number: str
     tg_username: Optional[str] = None
     role: str
+    main_account: Optional[int] = None
     is_main_account: bool
     is_going_on_event: bool
 
@@ -36,13 +37,14 @@ class MemberCreate(BaseModel):
 
 
 class MemberRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     first_name: str
+    second_name: str
     phone_number: str
     tg_username: Optional[str] = None
     role: str
+    main_account: Optional[int] = None
     is_main_account: bool
     is_going_on_event: bool
-
-    class Config:
-        orm_mode = True

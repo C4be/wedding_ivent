@@ -15,16 +15,23 @@ class Member(Base):
     id = Column(Integer, primary_key=True, index=True)
     first_name = Column(String, nullable=False)
     second_name = Column(String, nullable=False)
-    phone_number = Column(String, unique=True, index=True, nullable=False)
+    phone_number = Column(String, unique=True, index=True)
     tg_username = Column(String, unique=True, index=True)
 
-    # enum_role
     role = Column(Enum(Role, name="role_enum"), nullable=False, default=Role.FAMALY_HEAD)
 
-    is_main_account = Column(Boolean, nullable=False)  # глава семьи
-    is_going_on_event = Column(Boolean, nullable=False)  # присутствие на свадьбе
+    main_account = Column(Integer, ForeignKey("members.id", ondelete="SET NULL"), nullable=True)
+    is_main_account = Column(Boolean, nullable=False)
+    is_going_on_event = Column(Boolean, nullable=False)
 
-        # one-to-one relationship: Member.wish -> Wish
+    # self-referential: один главный -> много дочерних
+    family_members = relationship(
+        "Member",
+        foreign_keys=[main_account],
+        backref="head_member",
+        lazy="select",
+    )
+
     wish = relationship("Wish", uselist=False, back_populates="member", cascade="all, delete-orphan")
 
 
