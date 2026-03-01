@@ -63,7 +63,8 @@ class SiteConfig(Base):
     __tablename__ = "site_config"
 
     id = Column(Integer, primary_key=True, index=True)
-    key = Column(String(64), unique=True, nullable=False, index=True)  # e.g. "site"
-    data = Column(JSONB, nullable=False)  # основной JSON payload
+    config = Column(JSONB, nullable=False)  # основной JSON payload
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
+    def __repr__(self) -> str:
+        return f"<SiteConfig id={self.id}>"
