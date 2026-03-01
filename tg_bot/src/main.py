@@ -10,11 +10,11 @@ from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 
-from src.config import BOT_TOKEN
-from src.database.db import init_db
-from src.middlewares.auth import RegisterUserMiddleware
-from src.routers import user, admin
-from src.utils.logger import logger
+from config import BOT_TOKEN, ADMIN_IDS
+from database.db import init_db
+from middlewares.auth import RegisterUserMiddleware
+from routers import user_router, admin_router
+from utils.logger import logger
 
 
 async def main() -> None:
@@ -33,8 +33,8 @@ async def main() -> None:
     dp.callback_query.middleware(RegisterUserMiddleware())
 
     # Register routers (admin first — higher priority)
-    dp.include_router(admin.router)
-    dp.include_router(user.router)
+    dp.include_router(admin_router)
+    dp.include_router(user_router)
 
     logger.info("Bot is running. Press Ctrl+C to stop.")
     try:

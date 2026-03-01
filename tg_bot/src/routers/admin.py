@@ -1,71 +1,50 @@
+import json
 from aiogram import Router, F, Bot
 from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery, BufferedInputFile
 from aiogram.fsm.context import FSMContext
 
-from src.config import ADMIN_IDS
-from src.database.db import get_db
-from src.keyboards.admin_kb import (
+
+from database.db import get_db
+from keyboards.admin_kb import (
     admin_menu_kb, templates_kb, confirm_send_kb, members_kb,
 )
-from src.keyboards.user_kb import skip_kb
-from src.services.csv_export import export_members_to_csv, export_drinks_stats_to_csv
-from src.services.site_api import (
+from keyboards.user_kb import skip_kb
+from services.csv_export import export_members_to_csv, export_drinks_stats_to_csv
+from services.site_api import (
     get_site_config, update_site_config,
     add_image_to_site, add_member_to_site, delete_member_from_site,
 )
-from src.states.admin_states import (
+from states.admin_states import (
     SendNotificationState, AddImageState, AddMemberState,
     DeleteMemberState, CreateTemplateState, UpdateConfigState,
 )
-from src.utils.logger import logger
-import json
+from utils.logger import logger
+
 
 router = Router(name="admin")
 
-
-def is_admin(user_id: int) -> bool:
-    return user_id in ADMIN_IDS
-
-
-# ───────────────────────── FILTER ───────────────────────────
-
-@router.message.filter(lambda msg: is_admin(msg.from_user.id))
-@router.callback_query.filter(lambda cq: is_admin(cq.from_user.id))
-class AdminFilter:
-    pass
-
-
-# Применяем фильтр как декоратор не работает напрямую, используем middleware-подход через проверку в каждом хэндлере
-async def check_admin(message: Message) -> bool:
-    if not is_admin(message.from_user.id):
-        await message.answer("⛔ Доступ запрещён.")
-        return False
-    return True
-
-
-async def check_admin_cb(callback: CallbackQuery) -> bool:
-    if not is_admin(callback.from_user.id):
-        await callback.answer("⛔ Доступ запрещён.", show_alert=True)
-        return False
-    return True
-
-
-# ───────────────────────── ADMIN MENU ───────────────────────
+# ==============================================================================
+# Обычные команды Commands
+# ==============================================================================
 
 @router.message(Command("admin"))
-async def cmd_admin(message: Message):
-    if not await check_admin(message):
+async def cmd_admin(message: Message, is_admin: bool):
+    """Показать панель администратора c кнопками"""
+    if not is_admin:
         return
-    await message.answer("🔐 <b>Панель администратора</b>", parse_mode="HTML", reply_markup=admin_menu_kb())
-    logger.info(f"Admin {message.from_user.id} opened admin panel")
+    await message.answer(
+        "🔐 **Панель администратора**", 
+        parse_mode="MarkdownV2",
+        reply_markup=admin_menu_kb()
+    )
+    logger.info(f"Админ {message.from_user.username}({message.from_user.id}) открыл панель администратора")
 
-
-# ───────────────────────── GET MEMBERS ──────────────────────
 
 @router.message(F.text == "👥 Участники")
-async def cmd_get_members(message: Message):
-    if not await check_admin(message):
+async def cmd_get_members(message: Message, is_admin: bool):
+    """Показать список участников с их данными и статусом посещения"""
+    if not is_admin:
         return
     async with await get_db() as db:
         async with db.execute(
@@ -84,14 +63,12 @@ async def cmd_get_members(message: Message):
         text += f"#{m['id']} <b>{m['full_name']}</b> | 📱{m['phone'] or '—'} | Д1{d1} Д2{d2}\n"
 
     await message.answer(text, parse_mode="HTML")
-    logger.info(f"Admin {message.from_user.id} requested members list")
+    logger.info(f"Админ {message.from_user.username}({message.from_user.id}) запросил список участников")
 
-
-# ───────────────────────── GET ALL MEMBERS ──────────────────
 
 @router.message(F.text == "📊 Все участники")
-async def cmd_get_all_members(message: Message):
-    if not await check_admin(message):
+async def cmd_get_all_members(message: Message, is_admin: bool):
+    if not is_admin:
         return
     async with await get_db() as db:
         async with db.execute(
@@ -118,8 +95,8 @@ async def cmd_get_all_members(message: Message):
 # ───────────────────────── SEND NOTIFICATION ────────────────
 
 @router.message(F.text == "📢 Уведомление")
-async def cmd_send_notification(message: Message, state: FSMContext):
-    if not await check_admin(message):
+async def cmd_send_notification(message: Message, state: FSMContext, is_admin: bool):
+    if not is_admin:
         return
     async with await get_db() as db:
         async with db.execute("SELECT id, title FROM message_templates ORDER BY id") as cur:
@@ -137,8 +114,8 @@ async def cmd_send_notification(message: Message, state: FSMContext):
 
 
 @router.callback_query(SendNotificationState.choose_template, F.data.startswith("tpl_") & ~F.data.endswith("new"))
-async def notification_template_chosen(callback: CallbackQuery, state: FSMContext):
-    if not await check_admin_cb(callback):
+async def notification_template_chosen(callback: CallbackQuery, state: FSMContext, is_admin: bool):
+    if not is_admin:
         return
     tpl_id = int(callback.data.replace("tpl_", ""))
     async with await get_db() as db:
@@ -160,8 +137,8 @@ async def notification_template_chosen(callback: CallbackQuery, state: FSMContex
 
 
 @router.callback_query(SendNotificationState.choose_template, F.data == "tpl_new")
-async def notification_new_text(callback: CallbackQuery, state: FSMContext):
-    if not await check_admin_cb(callback):
+async def notification_new_text(callback: CallbackQuery, state: FSMContext,  is_admin: bool):
+    if not is_admin:
         return
     await state.set_state(SendNotificationState.input_text)
     await callback.message.answer("✍️ Напиши текст уведомления:")
