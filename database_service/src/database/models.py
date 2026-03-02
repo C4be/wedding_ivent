@@ -15,7 +15,7 @@ class Member(Base):
     id = Column(Integer, primary_key=True, index=True)
     first_name = Column(String, nullable=False)
     second_name = Column(String, nullable=False)
-    phone_number = Column(String, unique=True, index=True)
+    phone_number = Column(String, unique=False, index=True)
     tg_username = Column(String, unique=True, index=True)
 
     role = Column(Enum(Role, name="role_enum"), nullable=False, default=Role.FAMALY_HEAD)

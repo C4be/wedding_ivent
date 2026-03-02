@@ -6,7 +6,7 @@ from typing import Optional
 class MemberCreate(BaseModel):
     first_name: str
     second_name: str
-    phone_number: str
+    phone_number: Optional[str] = None
     tg_username: Optional[str] = None
     role: str
     main_account: Optional[int] = None
@@ -28,8 +28,8 @@ class MemberCreate(BaseModel):
     @field_validator("phone_number")
     @classmethod
     def validate_phone_number(cls, v: str) -> str:
-        if not v or not isinstance(v, str):
-            raise ValueError("phone_number is required")
+        # if not v or not isinstance(v, str):
+        #     raise ValueError("phone_number is required")
         digits = re.sub(r"\D", "", v)
         if len(digits) < 7 or len(digits) > 15:
             raise ValueError("phone_number must contain between 7 and 15 digits")
@@ -42,7 +42,7 @@ class MemberRead(BaseModel):
     id: int
     first_name: str
     second_name: str
-    phone_number: str
+    phone_number: Optional[str] = None
     tg_username: Optional[str] = None
     role: str
     main_account: Optional[int] = None

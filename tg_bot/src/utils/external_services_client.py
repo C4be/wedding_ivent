@@ -1,4 +1,3 @@
-# ...existing code...
 from __future__ import annotations
 
 import asyncio
@@ -52,8 +51,15 @@ class AsyncHTTPClient:
         headers: Optional[Dict[str, str]] = None,
         timeout: float = 10.0,
         trust_env: bool = False,
+        follow_redirects: bool = True,
     ) -> None:
-        self._client = httpx.AsyncClient(base_url=base_url or "", headers=headers or {}, timeout=timeout, trust_env=trust_env)
+        self._client = httpx.AsyncClient(
+            base_url=base_url or "",
+            headers=headers or {},
+            timeout=timeout,
+            trust_env=trust_env,
+            follow_redirects=follow_redirects,
+        )
 
     async def request(
         self,
