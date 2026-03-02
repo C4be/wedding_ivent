@@ -1,0 +1,32 @@
+2026-03-02 09:45:05 | INFO     | wedding_bot | Запуск свадебного бота...
+2026-03-02 09:45:05 | INFO     | wedding_bot | Бот запущен. Нажмите Ctrl+C, чтобы остановить.
+2026-03-02 09:45:23 | INFO     | wedding_bot | Пользователь C4be74 (ID: 1163267317) запустил бота.
+2026-03-02 09:45:23 | ERROR    | wedding_bot | Ошибка при обращении к DB_SERVICE_URL
+Traceback (most recent call last):
+  File "/app/src/routers/member.py", line 36, in cmd_start
+    resp = await client.get("/members/tg_username", params={"tg_username": username})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/utils/external_services_client.py", line 103, in get
+    return await self.request("GET", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/utils/external_services_client.py", line 85, in request
+    resp.raise_for_status()
+  File "/usr/local/lib/python3.11/site-packages/httpx/_models.py", line 829, in raise_for_status
+    raise HTTPStatusError(message, request=request, response=self)
+httpx.HTTPStatusError: Server error '500 Internal Server Error' for url 'http://wedding-db-service:8000/members/tg_username?tg_username=%40C4be74'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500
+2026-03-02 09:46:17 | INFO     | wedding_bot | Пользователь C4be74 (ID: 1163267317) запустил бота.
+2026-03-02 09:46:56 | INFO     | wedding_bot | Пользователь C4be74 (ID: 1163267317) запустил бота.
+2026-03-02 09:49:18 | INFO     | wedding_bot | Бот остановлен.
+2026-03-02 09:49:20 | INFO     | wedding_bot | Запуск свадебного бота...
+2026-03-02 09:49:20 | INFO     | wedding_bot | Бот запущен. Нажмите Ctrl+C, чтобы остановить.
+2026-03-02 09:49:22 | INFO     | wedding_bot | Пользователь C4be74 (ID: 1163267317) запустил бота.
+2026-03-02 09:49:22 | INFO     | wedding_bot | Подготовлен ответ: Привет, Гимазетдинов Дима, вижу тебя в списках участников.
+2026-03-02 09:50:14 | INFO     | wedding_bot | Пользователь Sirena229 (ID: 1949765943) запустил бота.
+2026-03-02 09:50:14 | INFO     | wedding_bot | Подготовлен ответ: Привет, Кирилл, не вижу тебя в списках пользователей. Хочешь зарегистрироваться на мероприятие?
+2026-03-02 09:53:38 | INFO     | wedding_bot | Пользователь Sirena229 (ID: 1949765943) запустил бота.
+2026-03-02 09:53:38 | INFO     | wedding_bot | Подготовлен ответ: Привет, Кирилл Скинхед, вижу твою анкету. Хотите передумать и прийти на мероприятие?
+2026-03-02 09:54:13 | INFO     | wedding_bot | Пользователь Sirena230 (ID: 1949765943) запустил бота.
+2026-03-02 09:54:13 | INFO     | wedding_bot | Подготовлен ответ: Привет, Кирилл, не вижу тебя в списках пользователей. Хочешь зарегистрироваться на мероприятие?
+2026-03-02 09:54:31 | INFO     | wedding_bot | Пользователь None (ID: 1949765943) запустил бота.
+2026-03-02 09:54:36 | INFO     | wedding_bot | Пользователь None (ID: 1949765943) запустил бота.

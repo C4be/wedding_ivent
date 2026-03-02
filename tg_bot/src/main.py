@@ -5,15 +5,12 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from config import settings
-from database.db import init_db
-from routers import user_router, admin_router
+from routers import member_router
 from utils.logger import logger
 
 
 async def main() -> None:
     logger.info("Запуск свадебного бота...")
-
-    await init_db()
 
     bot = Bot(
         token=settings.BOT_TOKEN,
@@ -22,8 +19,7 @@ async def main() -> None:
     dp = Dispatcher(storage=MemoryStorage())
 
     # Регистрируем роутеры
-    dp.include_router(admin_router)
-    dp.include_router(user_router)
+    dp.include_router(member_router)
 
     logger.info("Бот запущен. Нажмите Ctrl+C, чтобы остановить.")
     try:

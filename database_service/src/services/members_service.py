@@ -66,6 +66,13 @@ class MembersService:
     async def get_families_count(self) -> int:
         return await self.repo.get_families_count()
 
+    # 9. Получить участника по tg_username
+    async def get_member_by_tg_username(self, tg_username: str) -> Member:
+        member = await self.repo.get_member_by_tg_username(tg_username)
+        if member is None:
+            raise ValueError(f"Member with tg_username='{tg_username}' not found")
+        return member
+
 
 async def get_members_service(
     repo: MembersRepository = Depends(get_members_repository),

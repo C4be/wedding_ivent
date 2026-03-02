@@ -1,0 +1,14 @@
+2026-03-02 09:45:23 | ERROR    | wedding_bot | Ошибка при обращении к DB_SERVICE_URL
+Traceback (most recent call last):
+  File "/app/src/routers/member.py", line 36, in cmd_start
+    resp = await client.get("/members/tg_username", params={"tg_username": username})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/utils/external_services_client.py", line 103, in get
+    return await self.request("GET", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/utils/external_services_client.py", line 85, in request
+    resp.raise_for_status()
+  File "/usr/local/lib/python3.11/site-packages/httpx/_models.py", line 829, in raise_for_status
+    raise HTTPStatusError(message, request=request, response=self)
+httpx.HTTPStatusError: Server error '500 Internal Server Error' for url 'http://wedding-db-service:8000/members/tg_username?tg_username=%40C4be74'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500

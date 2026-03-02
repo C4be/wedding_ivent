@@ -103,4 +103,16 @@ async def get_families_count(
     return await service.get_families_count()
 
 
+# 9. Получить участника по tg_username
+@router.get("/tg_username", response_model=MemberRead)
+async def get_member_by_tg_username(
+    tg_username: str,
+    service: MembersService = Depends(get_members_service),
+):
+    try:
+        return await service.get_member_by_tg_username(tg_username)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
 

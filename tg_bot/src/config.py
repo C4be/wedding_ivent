@@ -18,9 +18,12 @@ class Settings(BaseSettings):
 
     @field_validator("ADMIN_IDS", mode="before")
     def _parse_admin_ids(cls, v):
-        # Accept comma-separated string or already-parsed list
+        # Accept comma-separated string, single int, or already-parsed list
         if isinstance(v, str):
+            # "1,2,3" or "1163267317"
             return [int(x.strip()) for x in v.split(",") if x.strip().isdigit()]
+        if isinstance(v, int):
+            return [v]
         return v
     
     model_config = SettingsConfigDict(
