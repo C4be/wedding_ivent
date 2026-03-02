@@ -1,7 +1,8 @@
 from __future__ import annotations
-from datetime import time, datetime
+from datetime import datetime
+from datetime import time as dt_time
 from typing import Optional
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 from enums import Day
 
@@ -10,7 +11,7 @@ class EventBase(BaseModel):
     day: Day = Field(..., description="День события (enum Day)")
     ivent_name: str = Field(..., min_length=1, max_length=200)
     description: str = Field(..., min_length=1, max_length=2000)
-    time: time = Field(..., description="Время в формате HH:MM")
+    time: dt_time = Field(..., description="Время в формате HH:MM")
 
     @field_validator("ivent_name")
     @classmethod
@@ -30,7 +31,7 @@ class EventBase(BaseModel):
 
     @field_validator("time", mode="before")
     @classmethod
-    def parse_time(cls, v) -> time:
+    def parse_time(cls, v) -> dt_time:
         """
         Accepts:
          - datetime.time
@@ -39,7 +40,7 @@ class EventBase(BaseModel):
         """
         if v is None:
             raise ValueError("time is required")
-        if isinstance(v, time):
+        if isinstance(v, dt_time):
             return v
         if isinstance(v, datetime):
             return v.time()
@@ -78,7 +79,7 @@ class EventUpdate(BaseModel):
     day: Optional[Day] = None
     ivent_name: Optional[str] = None
     description: Optional[str] = None
-    time: Optional[time] = None
+    time: Optional[dt_time] = None
 
     @field_validator("ivent_name")
     @classmethod
@@ -102,10 +103,10 @@ class EventUpdate(BaseModel):
 
     @field_validator("time", mode="before")
     @classmethod
-    def parse_time_optional(cls, v) -> Optional[time]:
+    def parse_time_optional(cls, v) -> Optional[dt_time]:
         if v is None:
             return None
-        if isinstance(v, time):
+        if isinstance(v, dt_time):
             return v
         if isinstance(v, datetime):
             return v.time()
@@ -122,9 +123,10 @@ class EventUpdate(BaseModel):
 class EventRead(EventBase):
     id: int
 
-    class Config:
-        orm_mode = True
-        json_encoders = {
-            time: lambda v: v.strftime("%H:%M"),
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_encoders={
+            dt_time: lambda v: v.strftime("%H:%M"),
             Day: lambda v: v.value
         }
+    )
