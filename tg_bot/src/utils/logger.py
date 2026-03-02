@@ -1,11 +1,11 @@
 import logging
 import os
 from logging.handlers import RotatingFileHandler
-from src.config import LOG_DIR
+from config import settings
 
 
 def setup_logger(name: str = "wedding_bot") -> logging.Logger:
-    os.makedirs(LOG_DIR, exist_ok=True)
+    os.makedirs(settings.LOG_DIR, exist_ok=True)
 
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
@@ -22,7 +22,7 @@ def setup_logger(name: str = "wedding_bot") -> logging.Logger:
 
     # File handler with rotation (max 5MB, keep 3 files)
     file_handler = RotatingFileHandler(
-        os.path.join(LOG_DIR, f"{name}.log"),
+        os.path.join(settings.LOG_DIR, f"{name}.log"),
         maxBytes=5 * 1024 * 1024,
         backupCount=3,
         encoding="utf-8",
@@ -32,7 +32,7 @@ def setup_logger(name: str = "wedding_bot") -> logging.Logger:
 
     # Error file handler
     error_handler = RotatingFileHandler(
-        os.path.join(LOG_DIR, f"{name}_errors.log"),
+        os.path.join(settings.LOG_DIR, f"{name}_errors.log"),
         maxBytes=5 * 1024 * 1024,
         backupCount=3,
         encoding="utf-8",
