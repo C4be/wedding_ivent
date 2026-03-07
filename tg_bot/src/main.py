@@ -5,7 +5,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from config import settings
-from routers import member_router
+from routers import member_router, admin_router
 from utils.logger import logger
 
 
@@ -20,6 +20,7 @@ async def main() -> None:
 
     # Регистрируем роутеры
     dp.include_router(member_router)
+    dp.include_router(admin_router)
 
     logger.info("Бот запущен. Нажмите Ctrl+C, чтобы остановить.")
     try:

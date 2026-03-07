@@ -19,3 +19,4 @@ For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/St
 2026-03-02 12:23:23 | ERROR    | wedding_bot | HTTP ошибка при регистрации @C4be74: 500
 2026-03-02 12:39:11 | ERROR    | wedding_bot | HTTP ошибка при регистрации @Sirena230: 500
 2026-03-02 12:43:36 | ERROR    | wedding_bot | HTTP ошибка при регистрации @Sirena229: 500
+2026-03-02 14:04:36 | ERROR    | wedding_bot | HTTP ошибка (GET /members/stats/count) = 500
