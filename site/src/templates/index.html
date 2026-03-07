@@ -177,14 +177,6 @@
             </p>
         </div>
     </section>
-    <!-- <section class="section timeline" id="timeline">
-        <h2 class="section-title" data-aos="fade-up">Программа дня</h2>
-        <div class="container" style="display:flex; justify-content:center; align-items:center; flex-direction:column; min-height:160px; text-align:center;">
-            <h3>Will be soon!</h3>
-        </div>
-    </section> -->
-
-
 
     <!-- Location Section -->
     <section class="section location" id="location">
@@ -239,14 +231,6 @@
                         <a href="https://yandex.ru/maps/?pt={{ config.locations.day1_venue.coordinates.lng }},{{ config.locations.day1_venue.coordinates.lat }}&z=14&l=map" target="_blank" class="btn btn-outline">
                             Открыть карту
                         </a>
-                        <!-- Hidden: airplane and train buttons (can be restored if needed)
-                        <a href="https://www.aviasales.ru" target="_blank" class="btn btn-outline">
-                            ✈️ Авиабилеты
-                        </a>
-                        <a href="https://www.rzd.ru" target="_blank" class="btn btn-outline">
-                            🚂 РЖД
-                        </a>
-                        -->
                     </div>
                 </div>
                 
@@ -325,71 +309,82 @@
             <div class="section-divider" data-aos="fade-up">
                 <span>💌</span>
             </div>
-            
-            <form class="rsvp-form" id="rsvpForm" data-aos="fade-up">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="firstName">Имя *</label>
-                        <input type="text" id="firstName" name="first_name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="lastName">Фамилия *</label>
-                        <input type="text" id="lastName" name="last_name" required>
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="phone">Телефон *</label>
-                        <input type="text" id="phone" name="phone" required placeholder="+7 (999) 123-45-67">
-                    </div>
-                    <div class="form-group">
-                        <label for="telegram">Telegram *</label>
-                        <input type="text" id="telegram" name="telegram" required placeholder="@username или номер">
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label>Вы придёте? *</label>
-                    <div class="radio-group">
-                        <label class="radio-label">
-                            <input type="radio" name="attending" value="yes" required>
-                            <span class="radio-custom"></span>
-                            ✅ Буду с радостью!
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="attending" value="no">
-                            <span class="radio-custom"></span>
-                            ❌ К сожалению, не смогу
-                        </label>
-                    </div>
-                </div>
-                
-                <div class="form-group conditional-fields" id="conditionalFields">
+
+            <form class="rsvp-form" id="rsvpForm" data-aos="fade-up" novalidate>
+
+                <!-- Step 1: Main guest info -->
+                <div class="rsvp-step" id="rsvpStep1">
+                    <h3 class="rsvp-step-title">Ваши данные</h3>
+
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="guestsCount">Количество гостей (включая вас)</label>
-                            <select id="guestsCount" name="guests_count">
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5+</option>
-                            </select>
+                            <label for="firstName">Имя *</label>
+                            <input type="text" id="firstName" name="first_name" required>
                         </div>
                         <div class="form-group">
-                            <label for="children">Дети (имена и возраст)</label>
-                            <input type="text" id="children" name="children" placeholder="Например: Маша (5 лет)">
+                            <label for="lastName">Фамилия *</label>
+                            <input type="text" id="lastName" name="last_name" required>
                         </div>
                     </div>
-                    
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="phone">Телефон *</label>
+                            <input type="text" id="phone" name="phone" required placeholder="+7 (999) 123-45-67">
+                        </div>
+                        <div class="form-group">
+                            <label for="telegram">Telegram *</label>
+                            <input type="text" id="telegram" name="telegram" required placeholder="@username">
+                        </div>
+                    </div>
+
+                    <!-- Attending -->
                     <div class="form-group">
-                        <label for="foodPreferences">Пожелания по еде (аллергии, веганство)</label>
-                        <textarea id="foodPreferences" name="food_preferences" rows="3" placeholder="Укажите, если есть особые предпочтения"></textarea>
+                        <label>Вы придёте? *</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="attending" value="yes" required>
+                                <span class="radio-custom"></span>
+                                ✅ Буду с радостью!
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="attending" value="no">
+                                <span class="radio-custom"></span>
+                                ❌ К сожалению, не смогу
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Coming alone? (shown only when attending=yes) -->
+                    <div class="form-group rsvp-with-group" id="rsvpWithGroup" style="display:none">
+                        <label>Придёте один(а) или с кем-то? *</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="with_others" value="alone">
+                                <span class="radio-custom"></span>
+                                🙋 Приду один(а)
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="with_others" value="family">
+                                <span class="radio-custom"></span>
+                                👨‍👩‍👧 Приду с кем-то
+                            </label>
+                        </div>
                     </div>
                 </div>
-                
-                <button type="submit" class="btn btn-primary btn-block">Отправить</button>
+
+                <!-- Step 2: Family members (shown when with_others=family) -->
+                <div class="rsvp-family-section" id="rsvpFamilySection" style="display:none">
+                    <h3 class="rsvp-step-title">Сопровождающие</h3>
+                    <div id="familyMembersList"></div>
+                    <button type="button" class="btn btn-outline btn-add-member" id="addFamilyMember">
+                        ➕ Добавить сопровождающего
+                    </button>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" id="rsvpSubmitBtn" style="margin-top:24px">
+                    Отправить
+                </button>
             </form>
         </div>
     </section>

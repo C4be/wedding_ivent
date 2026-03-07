@@ -20,3 +20,17 @@ For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/St
 2026-03-02 12:39:11 | ERROR    | wedding_bot | HTTP ошибка при регистрации @Sirena230: 500
 2026-03-02 12:43:36 | ERROR    | wedding_bot | HTTP ошибка при регистрации @Sirena229: 500
 2026-03-02 14:04:36 | ERROR    | wedding_bot | HTTP ошибка (GET /members/stats/count) = 500
+2026-03-07 07:13:34 | ERROR    | wedding_bot | Ошибка при обращении к DB_SERVICE_URL
+Traceback (most recent call last):
+  File "/app/src/routers/member_start.py", line 26, in cmd_start
+    resp = await client.get(f"/members/by-telegram-id/{user_id}")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/utils/external_services_client.py", line 109, in get
+    return await self.request("GET", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/utils/external_services_client.py", line 91, in request
+    resp.raise_for_status()
+  File "/usr/local/lib/python3.11/site-packages/httpx/_models.py", line 829, in raise_for_status
+    raise HTTPStatusError(message, request=request, response=self)
+httpx.HTTPStatusError: Server error '500 Internal Server Error' for url 'http://wedding-db-service:8000/members/by-telegram-id/1163267317'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500

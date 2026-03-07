@@ -13,6 +13,7 @@ CORS(app)
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), '..', 'materials', 'site.info.json')
 IMAGES_PATH = os.path.join(os.path.dirname(__file__), '..', 'materials', 'imgs')
 SLIDER_PATH = os.path.join(os.path.dirname(__file__), 'static', 'images', 'slider')
+DB_SERVICE_URL = os.environ.get('DB_SERVICE_URL', 'http://wedding-db-service:8000')
 
 def load_config():
     with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
@@ -114,8 +115,6 @@ def submit_question():
     """Submit question to Telegram bot"""
     try:
         data = request.json
-        config = load_config()
-        
         message = f"""
 ❓ *Новый вопрос от гостя!*
 
@@ -126,18 +125,13 @@ def submit_question():
 {data.get('question', '')}
         """
         
-        bot_token = config['telegram_bot']['token']
-        chat_id = config['telegram_bot']['chat_id']
-        
-        if bot_token != "YOUR_BOT_TOKEN":
-            requests.post(
-                f"https://api.telegram.org/bot{bot_token}/sendMessage",
-                json={
-                    "chat_id": chat_id,
-                    "text": message,
-                    "parse_mode": "Markdown"
-                }
-            )
+        requests.post(
+            f"http://wedding-bot:5555/form",
+            json={
+                "text": message,
+                "parse_mode": "Markdown"
+            }
+        )
         
         return jsonify({"status": "success", "message": "Question submitted"})
     except Exception as e:
@@ -204,6 +198,39 @@ def get_slider_images():
         return jsonify(images)
     except Exception as e:
         return jsonify([])
+
+@app.route('/api/members', methods=['POST'])
+def create_member():
+    """Proxy single member registration to wedding-db-service"""
+    try:
+        data = request.json or {}
+        resp = requests.post(
+            f"{DB_SERVICE_URL}/members/",
+            json=data,
+            timeout=10
+        )
+        return jsonify(resp.json()), resp.status_code
+    except requests.exceptions.ConnectionError:
+        return jsonify({"status": "error", "message": "DB service unavailable"}), 503
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route('/api/members/family', methods=['POST'])
+def create_family():
+    """Proxy family registration to wedding-db-service"""
+    try:
+        data = request.json or []
+        resp = requests.post(
+            f"{DB_SERVICE_URL}/members/family",
+            json=data,
+            timeout=10
+        )
+        return jsonify(resp.json()), resp.status_code
+    except requests.exceptions.ConnectionError:
+        return jsonify({"status": "error", "message": "DB service unavailable"}), 503
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.errorhandler(400)
 def bad_request(error):

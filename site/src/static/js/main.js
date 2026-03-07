@@ -359,91 +359,304 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // ============ RSVP Form (consolidated) ============
-    // Remove duplicated declarations and handlers; keep a single, consistent implementation.
-    (function() {
-        const rsvpForm = document.getElementById('rsvpForm');
-        const conditionalFields = document.getElementById('conditionalFields');
-        const attendingRadios = Array.from(document.querySelectorAll('input[name="attending"]'));
+    // ============ RSVP Form (new) ============
+    (function () {
+        const form = document.getElementById('rsvpForm');
+        if (!form) return;
 
-        // Ensure conditional fields reflect current selection
-        function updateConditional() {
-            const checked = document.querySelector('input[name="attending"]:checked');
-            if (checked && checked.value === 'yes') {
-                // show using className used by CSS or inline style as fallback
-                conditionalFields.classList.add('show');
-                conditionalFields.style.display = '';
+        const attendingRadios  = () => Array.from(form.querySelectorAll('input[name="attending"]'));
+        const withOthersRadios = () => Array.from(form.querySelectorAll('input[name="with_others"]'));
+        const rsvpWithGroup    = document.getElementById('rsvpWithGroup');
+        const familySection    = document.getElementById('rsvpFamilySection');
+        const familyList       = document.getElementById('familyMembersList');
+        const addBtn           = document.getElementById('addFamilyMember');
+
+        let memberCounter = 0;
+
+        // ---- visibility helpers ----
+        function getVal(radios) {
+            const c = radios().find(r => r.checked);
+            return c ? c.value : null;
+        }
+
+        function refreshVisibility() {
+            const attending  = getVal(attendingRadios);
+            const withOthers = getVal(withOthersRadios);
+
+            // Show "alone / family" only when attending
+            rsvpWithGroup.style.display = attending === 'yes' ? '' : 'none';
+            if (attending !== 'yes') {
+                // reset with_others selection
+                withOthersRadios().forEach(r => r.checked = false);
+            }
+
+            // Show family section
+            const showFamily = attending === 'yes' && withOthers === 'family';
+            familySection.style.display = showFamily ? '' : 'none';
+            if (!showFamily) familyList.innerHTML = '';
+        }
+
+        attendingRadios().forEach(r  => r.addEventListener('change', refreshVisibility));
+        // delegate for dynamically added radios
+        form.addEventListener('change', function (e) {
+            if (e.target.name === 'with_others') refreshVisibility();
+        });
+
+        // ---- family member card ----
+        function createMemberCard() {
+            memberCounter++;
+            const idx = memberCounter;
+
+            const card = document.createElement('div');
+            card.className = 'family-member-card';
+            card.dataset.member = idx;
+
+            card.innerHTML = `
+                <div class="family-member-card-header">
+                    <span class="family-member-card-title">Сопровождающий ${idx}</span>
+                    <button type="button" class="family-member-remove" aria-label="Удалить">✕</button>
+                </div>
+
+                <div class="form-group">
+                    <label>Роль *</label>
+                    <div class="role-selector">
+                        <button type="button" class="role-btn" data-role="partner">💑 Вторая половинка</button>
+                        <button type="button" class="role-btn" data-role="child">👶 Ребёнок</button>
+                    </div>
+                </div>
+
+                <div class="member-fields" data-fields-for="${idx}" style="display:none"></div>
+            `;
+
+            // Role buttons
+            card.querySelectorAll('.role-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    card.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    card.dataset.role = btn.dataset.role;
+                    renderMemberFields(card, btn.dataset.role);
+                });
+            });
+
+            // Remove button
+            card.querySelector('.family-member-remove').addEventListener('click', () => {
+                card.remove();
+                renumberCards();
+            });
+
+            return card;
+        }
+
+        function renderMemberFields(card, role) {
+            const container = card.querySelector('.member-fields');
+            container.style.display = '';
+
+            if (role === 'child') {
+                container.innerHTML = `
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Имя *</label>
+                            <input type="text" name="member_first_name" required placeholder="Имя ребёнка">
+                        </div>
+                        <div class="form-group">
+                            <label>Фамилия *</label>
+                            <input type="text" name="member_last_name" required placeholder="Фамилия ребёнка">
+                        </div>
+                    </div>
+                `;
             } else {
-                conditionalFields.classList.remove('show');
-                conditionalFields.style.display = 'none';
+                // partner
+                container.innerHTML = `
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Имя *</label>
+                            <input type="text" name="member_first_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Фамилия *</label>
+                            <input type="text" name="member_last_name" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Телефон *</label>
+                            <input type="text" name="member_phone" required placeholder="+7 (999) 123-45-67">
+                        </div>
+                        <div class="form-group">
+                            <label>Telegram *</label>
+                            <input type="text" name="member_telegram" required placeholder="@username">
+                        </div>
+                    </div>
+                `;
             }
         }
 
-        attendingRadios.forEach(radio => {
-            radio.addEventListener('change', updateConditional);
-        });
-        updateConditional();
-
-        // Single toast implementation (type can be 'success' or 'error')
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            if (!toast) return;
-            const toastMessage = toast.querySelector('.toast-message');
-            toastMessage.textContent = message;
-            toast.className = `toast ${type} show`;
-            setTimeout(() => toast.classList.remove('show'), 4000);
-        }
-
-        // Submit handler: serialize form to JSON and POST (send attending as "yes"/"no")
-        if (rsvpForm) {
-            rsvpForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-
-                const formData = new FormData(rsvpForm);
-
-                // Build payload matching server expectations (phone + telegram)
-                const payload = {
-                    first_name: formData.get('first_name') || '',
-                    last_name: formData.get('last_name') || '',
-                    phone: formData.get('phone') || '',
-                    telegram: formData.get('telegram') || '',
-                    attending: formData.get('attending') || '', // keep as "yes" or "no"
-                    guests_count: formData.get('guests_count') || 1,
-                    children: formData.get('children') || '',
-                    food_preferences: formData.get('food_preferences') || ''
-                };
-
-                // Basic client-side validation
-                if (!payload.attending) {
-                    showToast('Пожалуйста, укажите, придёте ли вы.', 'error');
-                    return;
-                }
-                if (!payload.phone || !payload.telegram) {
-                    showToast('Телефон и Telegram обязательны.', 'error');
-                    return;
-                }
-
-                try {
-                    const resp = await fetch('/api/rsvp', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    const json = await resp.json().catch(() => ({}));
-
-                    if (resp.ok && json.status === 'success') {
-                        showToast(json.message || 'Анкета отправлена', 'success');
-                        rsvpForm.reset();
-                        updateConditional();
-                    } else {
-                        showToast(json.message || 'Ошибка при отправке.', 'error');
-                    }
-                } catch (err) {
-                    console.error(err);
-                    showToast('Ошибка сети. Попробуйте позже.', 'error');
-                }
+        function renumberCards() {
+            familyList.querySelectorAll('.family-member-card').forEach((card, i) => {
+                card.querySelector('.family-member-card-title').textContent = `Сопровождающий ${i + 1}`;
             });
         }
+
+        addBtn.addEventListener('click', () => {
+            familyList.appendChild(createMemberCard());
+        });
+
+        // ---- collect & submit ----
+        function collectMembers() {
+            const members = [];
+            familyList.querySelectorAll('.family-member-card').forEach(card => {
+                const role = card.dataset.role;
+                if (!role) return; // no role selected yet — skip (validation will catch it)
+
+                const fn = card.querySelector('[name="member_first_name"]')?.value.trim() || '';
+                const ln = card.querySelector('[name="member_last_name"]')?.value.trim() || '';
+                const ph = card.querySelector('[name="member_phone"]')?.value.trim()      || '';
+                const tg = card.querySelector('[name="member_telegram"]')?.value.trim()   || '';
+
+                members.push({ fn, ln, ph, tg, role });
+            });
+            return members;
+        }
+
+        function validateForm() {
+            const fn = form.querySelector('#firstName').value.trim();
+            const ln = form.querySelector('#lastName').value.trim();
+            const ph = form.querySelector('#phone').value.trim();
+            const tg = form.querySelector('#telegram').value.trim();
+            const attending = getVal(attendingRadios);
+
+            if (!fn || !ln) { showToast('Введите имя и фамилию.', 'error'); return false; }
+            if (!ph)          { showToast('Введите номер телефона.', 'error'); return false; }
+            if (!tg)          { showToast('Введите Telegram-ник.', 'error'); return false; }
+            if (!attending)   { showToast('Укажите, придёте ли вы.', 'error'); return false; }
+
+            if (attending === 'yes') {
+                const wo = getVal(withOthersRadios);
+                if (!wo) { showToast('Укажите, придёте один или с кем-то.', 'error'); return false; }
+
+                if (wo === 'family') {
+                    const cards = familyList.querySelectorAll('.family-member-card');
+                    if (cards.length === 0) {
+                        showToast('Добавьте хотя бы одного сопровождающего.', 'error');
+                        return false;
+                    }
+                    for (const card of cards) {
+                        const role = card.dataset.role;
+                        if (!role) { showToast('Выберите роль для каждого сопровождающего.', 'error'); return false; }
+                        const mfn = card.querySelector('[name="member_first_name"]')?.value.trim();
+                        const mln = card.querySelector('[name="member_last_name"]')?.value.trim();
+                        if (!mfn || !mln) { showToast('Введите имя и фамилию для каждого сопровождающего.', 'error'); return false; }
+                        if (role === 'partner') {
+                            const mph = card.querySelector('[name="member_phone"]')?.value.trim();
+                            const mtg = card.querySelector('[name="member_telegram"]')?.value.trim();
+                            if (!mph || !mtg) { showToast('Введите телефон и Telegram для второй половинки.', 'error'); return false; }
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!validateForm()) return;
+
+            const attending   = getVal(attendingRadios);
+            const isAttending = attending === 'yes';
+            const withOthers  = getVal(withOthersRadios);
+
+            const mainPerson = {
+                first_name:       form.querySelector('#firstName').value.trim(),
+                second_name:      form.querySelector('#lastName').value.trim(),
+                phone_number:     form.querySelector('#phone').value.trim(),
+                tg_username:      form.querySelector('#telegram').value.trim(),
+                telegram_id:      null,
+                chat_id:          null,
+                role:             'FAMALY_HEAD',
+                main_account:     null,
+                is_main_account:  true,
+                is_going_on_event: isAttending
+            };
+
+            const submitBtn = document.getElementById('rsvpSubmitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Отправляем...';
+
+            try {
+                let resp;
+
+                if (!isAttending || withOthers === 'alone' || !withOthers) {
+                    // Single member
+                    resp = await fetch('/api/members', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(mainPerson)
+                    });
+                } else {
+                    // Family
+                    const rawMembers = collectMembers();
+                    const family = [mainPerson];
+                    
+                    
+                    rawMembers.forEach((m, i) => {
+                        const phone = m.ph ? m.ph.trim() : '';
+                        if (!phone) {
+                            family.push({
+                                first_name:       m.fn,
+                                second_name:      m.ln,
+                                tg_username:      m.tg ? m.tg.trim() : null,
+                                telegram_id:      null,
+                                chat_id:          null,
+                                role:             m.role === 'child' ? 'CHILD' : 'FAMALY_TAIL',
+                                main_account:     null,
+                                is_main_account:  false,
+                                is_going_on_event: true
+                            });
+                        } else {
+                            family.push({
+                                first_name:       m.fn,
+                                second_name:      m.ln,
+                                phone_number:     m.ph ? m.ph.trim() : null ,
+                                tg_username:      m.tg ? m.tg.trim() : null,
+                                telegram_id:      null,
+                                chat_id:          null,
+                                role:             m.role === 'child' ? 'CHILD' : 'FAMALY_TAIL',
+                                main_account:     null,
+                                is_main_account:  false,
+                                is_going_on_event: true
+                            });
+                        }
+                    });
+
+                    
+
+                    resp = await fetch('/api/members/family', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(family)
+                    });
+                }
+
+                const json = await resp.json().catch(() => ({}));
+
+                if (resp.ok) {
+                    showToast(json.message || 'Анкета отправлена! 🎉', 'success');
+                    form.reset();
+                    familyList.innerHTML = '';
+                    refreshVisibility();
+                } else {
+                    showToast(json.message || json.detail || 'Ошибка при отправке.', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Ошибка сети. Попробуйте позже.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Отправить';
+            }
+        });
+
+        refreshVisibility();
     })();
 
     // ============ Question Form ============

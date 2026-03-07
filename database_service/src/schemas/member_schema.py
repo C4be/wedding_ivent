@@ -8,6 +8,8 @@ class MemberCreate(BaseModel):
     second_name: str
     phone_number: Optional[str] = None
     tg_username: Optional[str] = None
+    telegram_id: Optional[int] = None
+    chat_id: Optional[int] = None
     role: str
     main_account: Optional[int] = None
     is_main_account: bool
@@ -44,6 +46,8 @@ class MemberRead(BaseModel):
     second_name: str
     phone_number: Optional[str] = None
     tg_username: Optional[str] = None
+    telegram_id: Optional[int] = None
+    chat_id: Optional[int] = None
     role: str
     main_account: Optional[int] = None
     is_main_account: bool

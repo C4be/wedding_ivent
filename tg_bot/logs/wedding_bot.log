@@ -127,3 +127,41 @@ For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/St
 2026-03-02 14:36:42 | WARNING  | wedding_bot | Не удалось отправить пользователю @Sirena229: Telegram server says - Bad Request: chat not found
 2026-03-02 14:36:43 | WARNING  | wedding_bot | Не удалось отправить пользователю @Sirena230: Telegram server says - Bad Request: chat not found
 2026-03-02 14:59:40 | INFO     | wedding_bot | Бот остановлен.
+2026-03-07 07:12:46 | INFO     | wedding_bot | Запуск свадебного бота...
+2026-03-07 07:12:46 | INFO     | wedding_bot | Бот запущен. Нажмите Ctrl+C, чтобы остановить.
+2026-03-07 07:13:34 | INFO     | wedding_bot | Пользователь C4be74 (ID: 1163267317) запустил бота.
+2026-03-07 07:13:34 | ERROR    | wedding_bot | Ошибка при обращении к DB_SERVICE_URL
+Traceback (most recent call last):
+  File "/app/src/routers/member_start.py", line 26, in cmd_start
+    resp = await client.get(f"/members/by-telegram-id/{user_id}")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/utils/external_services_client.py", line 109, in get
+    return await self.request("GET", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/utils/external_services_client.py", line 91, in request
+    resp.raise_for_status()
+  File "/usr/local/lib/python3.11/site-packages/httpx/_models.py", line 829, in raise_for_status
+    raise HTTPStatusError(message, request=request, response=self)
+httpx.HTTPStatusError: Server error '500 Internal Server Error' for url 'http://wedding-db-service:8000/members/by-telegram-id/1163267317'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500
+2026-03-07 07:15:47 | INFO     | wedding_bot | Пользователь C4be74 (ID: 1163267317) запустил бота.
+2026-03-07 07:16:19 | INFO     | wedding_bot | Обновлены telegram_id и chat_id для участника 1
+2026-03-07 07:16:19 | INFO     | wedding_bot | Регистрация @C4be74 прошла успешно, статус 201
+2026-03-07 07:16:44 | INFO     | wedding_bot | Пользователь Misa_2005 (ID: 1149770405) запустил бота.
+2026-03-07 07:17:10 | INFO     | wedding_bot | Обновлены telegram_id и chat_id для участника 2
+2026-03-07 07:17:10 | INFO     | wedding_bot | Регистрация @Misa_2005 прошла успешно, статус 201
+2026-03-07 07:59:58 | INFO     | wedding_bot | Бот остановлен.
+2026-03-07 11:19:09 | INFO     | wedding_bot | Запуск свадебного бота...
+2026-03-07 11:19:09 | INFO     | wedding_bot | Бот запущен. Нажмите Ctrl+C, чтобы остановить.
+2026-03-07 13:01:01 | INFO     | wedding_bot | Бот остановлен.
+2026-03-07 13:01:02 | INFO     | wedding_bot | Запуск свадебного бота...
+2026-03-07 13:01:02 | INFO     | wedding_bot | Веб-сервер запущен на порту 5555
+2026-03-07 13:01:02 | INFO     | wedding_bot | Бот запущен. Нажмите Ctrl+C, чтобы остановить.
+2026-03-07 13:08:19 | INFO     | wedding_bot | Бот остановлен.
+2026-03-07 13:08:20 | INFO     | wedding_bot | Запуск свадебного бота...
+2026-03-07 13:08:20 | INFO     | wedding_bot | Веб-сервер запущен на порту 5555
+2026-03-07 13:08:20 | INFO     | wedding_bot | Бот запущен. Нажмите Ctrl+C, чтобы остановить.
+2026-03-07 13:14:04 | INFO     | wedding_bot | Бот остановлен.
+2026-03-07 13:14:06 | INFO     | wedding_bot | Запуск свадебного бота...
+2026-03-07 13:14:06 | INFO     | wedding_bot | Веб-сервер запущен на порту 5555
+2026-03-07 13:14:06 | INFO     | wedding_bot | Бот запущен. Нажмите Ctrl+C, чтобы остановить.

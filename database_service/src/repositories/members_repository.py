@@ -80,6 +80,26 @@ class MembersRepository:
         await self.session.refresh(member)
         return member
 
+    # 4в. Обновить telegram_id пользователя
+    async def update_telegram_id(self, member_id: int, telegram_id: int) -> Optional[Member]:
+        member = await self.session.get(Member, member_id)
+        if member is None:
+            return None
+        member.telegram_id = telegram_id
+        await self.session.commit()
+        await self.session.refresh(member)
+        return member
+
+    # 4г. Обновить chat_id пользователя
+    async def update_chat_id(self, member_id: int, chat_id: int) -> Optional[Member]:
+        member = await self.session.get(Member, member_id)
+        if member is None:
+            return None
+        member.chat_id = chat_id
+        await self.session.commit()
+        await self.session.refresh(member)
+        return member
+
     # 5. Получить список всех пользователей
     async def get_all_members(self) -> list[Member]:
         result = await self.session.execute(select(Member))
@@ -158,6 +178,20 @@ class MembersRepository:
             )
         )
         return result.scalars().first()
+
+    # helper: найти участника по telegram_id
+    async def get_member_by_telegram_id(self, telegram_id: int) -> Optional[Member]:
+        result = await self.session.execute(
+            select(Member).where(Member.telegram_id == telegram_id)
+        )
+        return result.scalar_one_or_none()
+
+    # helper: найти участника по chat_id
+    async def get_member_by_chat_id(self, chat_id: int) -> Optional[Member]:
+        result = await self.session.execute(
+            select(Member).where(Member.chat_id == chat_id)
+        )
+        return result.scalar_one_or_none()
 
 async def get_members_repository(
     db: AsyncSession = Depends(get_async_session),

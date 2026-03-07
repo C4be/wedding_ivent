@@ -43,6 +43,20 @@ class MembersService:
             raise ValueError(f"Member with id={member_id} not found")
         return member
 
+    # 4в. Обновить telegram_id
+    async def update_telegram_id(self, member_id: int, telegram_id: int) -> Member:
+        member = await self.repo.update_telegram_id(member_id, telegram_id)
+        if member is None:
+            raise ValueError(f"Member with id={member_id} not found")
+        return member
+
+    # 4г. Обновить chat_id
+    async def update_chat_id(self, member_id: int, chat_id: int) -> Member:
+        member = await self.repo.update_chat_id(member_id, chat_id)
+        if member is None:
+            raise ValueError(f"Member with id={member_id} not found")
+        return member
+
     # 5. Получить список всех пользователей
     async def get_all_members(self) -> List[Member]:
         return await self.repo.get_all_members()
@@ -71,6 +85,20 @@ class MembersService:
         member = await self.repo.get_member_by_tg_username(tg_username)
         if member is None:
             raise ValueError(f"Member with tg_username='{tg_username}' not found")
+        return member
+
+    # 10. Получить участника по telegram_id
+    async def get_member_by_telegram_id(self, telegram_id: int) -> Member:
+        member = await self.repo.get_member_by_telegram_id(telegram_id)
+        if member is None:
+            raise ValueError(f"Member with telegram_id={telegram_id} not found")
+        return member
+
+    # 11. Получить участника по chat_id
+    async def get_member_by_chat_id(self, chat_id: int) -> Member:
+        member = await self.repo.get_member_by_chat_id(chat_id)
+        if member is None:
+            raise ValueError(f"Member with chat_id={chat_id} not found")
         return member
 
 

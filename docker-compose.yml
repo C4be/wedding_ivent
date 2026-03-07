@@ -80,6 +80,8 @@ services:
   wedding-bot:
     build: ./tg_bot
     container_name: wedding-bot
+    ports:
+      - "5555:5555"
     volumes:
       - ./tg_bot/data:/app/data
       - ./tg_bot/logs:/app/logs

@@ -87,55 +87,32 @@ async def _do_broadcast(message: Message, text: str) -> None:
     async def _send_to_user(u: dict) -> None:
         nonlocal sent, failed, skipped
         async with sem:
-            # возможные поля: 'tg_chat_id', 'chat_id', 'tg_username'
-            chat_id = u.get("tg_chat_id") or u.get("chat_id")
-            tg_username = u.get("tg_username")  # e.g. "@nick" or "nick"
-            try:
-                if chat_id:
-                    await message.bot.send_message(chat_id=chat_id, text=text)
-                    sent += 1
-                    return
-
-                if tg_username:
-                    # ensure starts with @ for get_chat
-                    if not tg_username.startswith("@"):
-                        username = f"@{tg_username}"
-                    else:
-                        username = tg_username
-                    # get_chat может вернуть объект, если бот имеет доступ
-                    chat = await message.bot.get_chat(username)
-                    await message.bot.send_message(chat_id=chat.id, text=text)
-                    sent += 1
-                    return
-
-                # нет контактной информации
+            chat_id = u.get("chat_id")
+            if not chat_id:
+                logger.warning(
+                    "Нет chat_id у участника id=%s (%s %s), пропускаем",
+                    u.get("id"), u.get("first_name"), u.get("second_name"),
+                )
                 skipped += 1
-            except (TelegramAPIError, TelegramBadRequest) as exc:
-                # Forbidden -> пользователь не дал доступ / не начинал диалог
-                logger.warning("Не удалось отправить пользователю %s: %s", u.get("tg_username") or u.get("id"), exc)
-                failed += 1
+                return
+            try:
+                await message.bot.send_message(chat_id=chat_id, text=text)
+                sent += 1
             except TelegramRetryAfter as exc:
-                # Telegram rate limit — задержаем и повторим
                 wait = int(getattr(exc, "retry_after", 1))
                 logger.warning("Rate limit, ждём %s сек", wait)
                 await asyncio.sleep(wait)
                 try:
-                    # повторная попытка (простая)
-                    if chat_id:
-                        await message.bot.send_message(chat_id=chat_id, text=text)
-                    elif tg_username:
-                        if not tg_username.startswith("@"):
-                            username = f"@{tg_username}"
-                        else:
-                            username = tg_username
-                        chat = await message.bot.get_chat(username)
-                        await message.bot.send_message(chat_id=chat.id, text=text)
+                    await message.bot.send_message(chat_id=chat_id, text=text)
                     sent += 1
                 except Exception:
-                    logger.exception("Повторная попытка не удалась")
+                    logger.exception("Повторная попытка не удалась для chat_id=%s", chat_id)
                     failed += 1
+            except (TelegramAPIError, TelegramBadRequest) as exc:
+                logger.warning("Не удалось отправить chat_id=%s: %s", chat_id, exc)
+                failed += 1
             except Exception:
-                logger.exception("Ошибка при отправке сообщения")
+                logger.exception("Ошибка при отправке сообщения chat_id=%s", chat_id)
                 failed += 1
 
     tasks = [asyncio.create_task(_send_to_user(u)) for u in users]

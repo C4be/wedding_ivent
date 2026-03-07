@@ -77,6 +77,8 @@ def kb_add_more():
 async def _send_registration(
     state: FSMContext,
     tg_username: str,
+    telegram_id: int,
+    chat_id: int,
 ) -> tuple[bool, str]:
     """Отправляет данные в сервис. Возвращает (успех, сообщение)."""
     data = await state.get_data()
@@ -101,6 +103,27 @@ async def _send_registration(
             else:
                 payload = [head] + members
                 resp = await client.post("/members/family", json=payload)
+
+            member_data = resp.json()
+            # Для /members/family сервис может вернуть список — берём первый элемент (главного)
+            if isinstance(member_data, list):
+                member_id = member_data[0].get("id")
+            else:
+                member_id = member_data.get("id")
+
+            if member_id:
+                try:
+                    await client.patch(
+                        f"/members/{member_id}/telegram-id",
+                        params={"telegram_id": telegram_id},
+                    )
+                    await client.patch(
+                        f"/members/{member_id}/chat-id",
+                        params={"chat_id": chat_id},
+                    )
+                    logger.info(f"Обновлены telegram_id и chat_id для участника {member_id}")
+                except Exception:
+                    logger.exception(f"Не удалось обновить telegram_id/chat_id для участника {member_id}")
 
         logger.info(f"Регистрация {tg_username} прошла успешно, статус {resp.status_code}")
         return True, "Регистрация прошла успешно! 🎉"
@@ -194,7 +217,12 @@ async def step_is_going(callback: CallbackQuery, state: FSMContext) -> None:
 
         data = await state.get_data()
         tg_username = data.get("tg_username") or f"@{callback.from_user.username or ''}"
-        ok, msg = await _send_registration(state, tg_username)
+        ok, msg = await _send_registration(
+            state,
+            tg_username,
+            telegram_id=callback.from_user.id,
+            chat_id=callback.message.chat.id,
+        )
         if not ok:
             await callback.message.answer(msg)
         await state.clear()
@@ -219,7 +247,12 @@ async def step_solo(callback: CallbackQuery, state: FSMContext) -> None:
     await callback.message.edit_text("Отлично! Завершаем регистрацию...")
     await callback.answer()
 
-    ok, msg = await _send_registration(state, tg_username)
+    ok, msg = await _send_registration(
+        state,
+        tg_username,
+        telegram_id=callback.from_user.id,
+        chat_id=callback.message.chat.id,
+    )
     await callback.message.answer(msg)
     await state.clear()
 
@@ -371,6 +404,11 @@ async def step_done(callback: CallbackQuery, state: FSMContext) -> None:
     await callback.message.edit_text("Завершаем регистрацию...")
     await callback.answer()
 
-    ok, msg = await _send_registration(state, tg_username)
+    ok, msg = await _send_registration(
+        state,
+        tg_username,
+        telegram_id=callback.from_user.id,
+        chat_id=callback.message.chat.id,
+    )
     await callback.message.answer(msg)
     await state.clear()

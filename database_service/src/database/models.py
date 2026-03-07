@@ -1,5 +1,5 @@
 from sqlalchemy import (
-    Column, Integer, String, Boolean, 
+    Column, Integer, BigInteger, String, Boolean, 
     Enum, Time, ForeignKey, DateTime, func
 )
 from sqlalchemy.orm import relationship
@@ -17,6 +17,8 @@ class Member(Base):
     second_name = Column(String, nullable=False)
     phone_number = Column(String, unique=False, index=True)
     tg_username = Column(String, unique=True, index=True)
+    telegram_id = Column(BigInteger, unique=True, nullable=True, index=True)
+    chat_id = Column(BigInteger, unique=True, nullable=True, index=True)
 
     role = Column(Enum(Role, name="role_enum"), nullable=False, default=Role.FAMALY_HEAD)
 

@@ -1019,6 +1019,106 @@ a:hover {
     animation: fadeIn 0.3s ease;
 }
 
+/* ============ RSVP New Form ============ */
+.rsvp-step-title {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight: 400;
+    margin-bottom: 24px;
+    color: var(--color-primary);
+    text-align: center;
+}
+
+.btn-add-member {
+    width: 100%;
+    margin-top: 8px;
+    border-style: dashed;
+    font-size: 0.95rem;
+}
+
+/* Family member card */
+.family-member-card {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    margin-bottom: 16px;
+    position: relative;
+    animation: fadeIn 0.3s ease;
+}
+
+.family-member-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.family-member-card-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--color-text);
+}
+
+.family-member-remove {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    color: var(--color-text-muted);
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+    line-height: 1;
+}
+
+.family-member-remove:hover {
+    background: rgba(231, 76, 60, 0.1);
+    color: #E74C3C;
+}
+
+/* Role selector */
+.role-selector {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.role-btn {
+    flex: 1;
+    padding: 12px 16px;
+    background: var(--color-bg-alt);
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-text);
+    transition: all var(--transition-normal);
+    text-align: center;
+}
+
+.role-btn:hover {
+    border-color: var(--color-primary);
+}
+
+.role-btn.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: white;
+}
+
+.member-fields {
+    animation: fadeIn 0.3s ease;
+}
+
+@media (max-width: 480px) {
+    .role-selector {
+        flex-direction: column;
+    }
+}
+
 /* ============ Questions Section ============ */
 .questions {
     background: var(--color-bg-alt);

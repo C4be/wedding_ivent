@@ -66,6 +66,32 @@ async def update_going_on_event(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
+# 4в. Обновить telegram_id
+@router.patch("/{member_id}/telegram-id", response_model=MemberRead)
+async def update_telegram_id(
+    member_id: int,
+    telegram_id: int,
+    service: MembersService = Depends(get_members_service),
+):
+    try:
+        return await service.update_telegram_id(member_id, telegram_id)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+# 4г. Обновить chat_id
+@router.patch("/{member_id}/chat-id", response_model=MemberRead)
+async def update_chat_id(
+    member_id: int,
+    chat_id: int,
+    service: MembersService = Depends(get_members_service),
+):
+    try:
+        return await service.update_chat_id(member_id, chat_id)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
 # 5. Получить список всех пользователей
 @router.get("/", response_model=List[MemberRead])
 async def get_all_members(
@@ -111,6 +137,30 @@ async def get_member_by_tg_username(
 ):
     try:
         return await service.get_member_by_tg_username(tg_username)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+# 10. Получить участника по telegram_id
+@router.get("/by-telegram-id/{telegram_id}", response_model=MemberRead)
+async def get_member_by_telegram_id(
+    telegram_id: int,
+    service: MembersService = Depends(get_members_service),
+):
+    try:
+        return await service.get_member_by_telegram_id(telegram_id)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+# 11. Получить участника по chat_id
+@router.get("/by-chat-id/{chat_id}", response_model=MemberRead)
+async def get_member_by_chat_id(
+    chat_id: int,
+    service: MembersService = Depends(get_members_service),
+):
+    try:
+        return await service.get_member_by_chat_id(chat_id)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
