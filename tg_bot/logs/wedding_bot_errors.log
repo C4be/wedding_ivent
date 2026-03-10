@@ -123,3 +123,4 @@ httpx.HTTPStatusError: Server error '500 Internal Server Error' for url 'http://
 For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500
 2026-03-10 18:17:28 | ERROR    | wedding_bot | HTTP ошибка при регистрации @: 422
 2026-03-10 18:29:33 | ERROR    | wedding_bot | HTTP ошибка при регистрации tg_7686716458: 422
+2026-03-10 19:59:18 | ERROR    | wedding_bot | HTTP ошибка при регистрации @tg_1949765943: 422

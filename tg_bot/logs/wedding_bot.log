@@ -399,3 +399,7 @@ For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/St
 2026-03-10 18:45:21 | WARNING  | wedding_bot | Нет chat_id у участника id=17 (Насерини Мафиози), пропускаем
 2026-03-10 18:45:21 | WARNING  | wedding_bot | Нет chat_id у участника id=19 (Hdhdhdhd Heheh she), пропускаем
 2026-03-10 18:45:21 | WARNING  | wedding_bot | Нет chat_id у участника id=20 (Jabbed Bending), пропускаем
+2026-03-10 19:53:08 | INFO     | wedding_bot | Пользователь None (ID: 1949765943) запустил бота.
+2026-03-10 19:53:08 | INFO     | wedding_bot | Пользователь None (ID: 1949765943) запустил бота.
+2026-03-10 19:53:08 | INFO     | wedding_bot | Пользователь None (ID: 1949765943) запустил бота.
+2026-03-10 19:59:18 | ERROR    | wedding_bot | HTTP ошибка при регистрации @tg_1949765943: 422
