@@ -102,9 +102,13 @@ async def _send_registration(
                 resp = await client.post("/members", json=head)
             else:
                 payload = [head] + members
+                with open("logs/registration_debug.json", "a") as f:
+                    f.write(f"Регистрация {tg_username}: отправляем в сервис: {payload}\n")
                 resp = await client.post("/members/family", json=payload)
 
             member_data = resp.json()
+
+
             # Для /members/family сервис может вернуть список — берём первый элемент (главного)
             if isinstance(member_data, list):
                 member_id = member_data[0].get("id")
@@ -188,10 +192,12 @@ async def step_phone(message: Message, state: FSMContext) -> None:
         return
     await state.update_data(phone_number=phone)
 
-    # tg_username подтягиваем автоматически — шаг пропускается
-    tg = message.from_user.username or ""
-    if tg and not tg.startswith("@"):
-        tg = f"@{tg}"
+    # Формируем tg_username: если у пользователя нет username — используем tg_{user_id}
+    raw_username = message.from_user.username
+    if raw_username:
+        tg = f"@{raw_username}" if not raw_username.startswith("@") else raw_username
+    else:
+        tg = f"@tg_{message.from_user.id}"
     await state.update_data(tg_username=tg)
 
     await state.set_state(RegistrationFSM.is_going)

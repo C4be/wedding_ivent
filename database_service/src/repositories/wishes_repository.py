@@ -38,8 +38,10 @@ class WishesRepository:
         existing = await self.session.execute(
             select(Wish).where(Wish.member_id == member_id)
         )
-        if existing.scalar_one_or_none() is not None:
-            raise ValueError(f"Member with id={member_id} already has a wish")
+        existing_wish = existing.scalar_one_or_none()
+        if existing_wish is not None:
+            await self.session.delete(existing_wish)
+            await self.session.flush()
 
         wish = Wish(
             member_id=member_id,
