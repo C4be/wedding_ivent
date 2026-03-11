@@ -2,10 +2,12 @@ from aiogram import Router
 
 from .member_start import router as cmd_start_router
 from .member_registration import router as registration_router
+from .member_leave import router as leave_router
 from .wish import router as wish_router
 
 member_router = Router()
 
 member_router.include_router(cmd_start_router)
 member_router.include_router(registration_router)
+member_router.include_router(leave_router)
 member_router.include_router(wish_router)

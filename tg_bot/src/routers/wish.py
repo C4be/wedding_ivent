@@ -150,7 +150,9 @@ async def _submit_wish(
     if user.username:
         tg_username = f"@{user.username}" if not user.username.startswith("@") else user.username
     else:
-        tg_username = f"tg_{user.id}"
+        tg_username = f"@tg_{user.id}"
+
+    logger.info("Пользователь %s отправляет пожелание: %s", tg_username, wish_text)
 
     payload = {"wish_text": wish_text}
     if drinks:
@@ -159,7 +161,7 @@ async def _submit_wish(
     await state.clear()
 
     try:
-        url_username = tg_username.lstrip("@")
+        url_username = tg_username
         async with AsyncHTTPClient(base_url=settings.DB_SERVICE_URL) as client:
             resp = await client.post(f"/wishes/by-tg/{url_username}", json=payload)
         logger.info("Пожелание от %s отправлено успешно, статус %s", tg_username, resp.status_code)

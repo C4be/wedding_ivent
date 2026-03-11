@@ -124,3 +124,14 @@ For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/St
 2026-03-10 18:17:28 | ERROR    | wedding_bot | HTTP ошибка при регистрации @: 422
 2026-03-10 18:29:33 | ERROR    | wedding_bot | HTTP ошибка при регистрации tg_7686716458: 422
 2026-03-10 19:59:18 | ERROR    | wedding_bot | HTTP ошибка при регистрации @tg_1949765943: 422
+2026-03-11 11:44:38 | ERROR    | wedding_bot | HTTP ошибка при отправке пожелания tg_1949765943: 400
+2026-03-11 11:53:15 | ERROR    | wedding_bot | HTTP ошибка при отправке пожелания tg_1949765943: 400
+2026-03-11 12:00:15 | ERROR    | wedding_bot | HTTP ошибка при отправке пожелания tg_1949765943: 400
+2026-03-11 12:06:36 | ERROR    | wedding_bot | HTTP ошибка при отправке пожелания @C4be74: 400
+2026-03-11 12:17:38 | ERROR    | wedding_bot | HTTP ошибка при отправке пожелания @C4be74: 400
+2026-03-11 12:18:50 | ERROR    | wedding_bot | HTTP ошибка при отправке пожелания @C4be74: 400
+2026-03-11 12:20:39 | ERROR    | wedding_bot | HTTP ошибка при отправке пожелания @C4be74: 400
+2026-03-11 12:21:06 | ERROR    | wedding_bot | HTTP ошибка при отправке пожелания @C4be74: 400
+2026-03-11 12:25:17 | ERROR    | wedding_bot | HTTP ошибка при отправке пожелания @C4be74: 400
+2026-03-11 12:27:42 | ERROR    | wedding_bot | HTTP ошибка при отправке пожелания @C4be74: 500
+2026-03-11 12:59:11 | ERROR    | wedding_bot | HTTP ошибка при регистрации @Kkola229: 422
