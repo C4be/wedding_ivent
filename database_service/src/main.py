@@ -1,3 +1,14 @@
+import logging
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler()  # вывод в консоль
+    ]
+)
+
+
 from fastapi import FastAPI, Depends
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator   
@@ -13,8 +24,9 @@ from routers.site_config_router import router as site_config_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    # startup
+    logging.info("Application starting up...")
     await init_db_create_all()
+    logging.info("Database initialized")
 
     app.include_router(members_router)
     app.include_router(wishes_router)
@@ -25,8 +37,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     try:
         yield
     finally:
-        # shutdown
-        pass
+        logging.info("Application shutting down...")
 
 
 def create_app() -> FastAPI:
@@ -40,3 +51,9 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
+
+
+if __name__ == "__main__":
+    import uvicorn
+    # log_config=LOGGING_CONFIG гарантирует, что uvicorn использует наш конфиг
+    uvicorn.run("main:app", host="0.0.0.0", port=8000)
