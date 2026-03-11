@@ -120,7 +120,7 @@ a:hover {
 
 .btn-primary {
     background: var(--color-primary);
-    color: white;
+    color: #ffffff;
     border-color: var(--color-primary);
 }
 
@@ -131,6 +131,11 @@ a:hover {
     box-shadow: var(--shadow-md);
 }
 
+/* В тёмной теме при hover фон прозрачный — текст должен быть виден */
+[data-theme="dark"] .btn-primary:hover {
+    color: var(--color-primary);
+}
+
 .btn-outline {
     background: transparent;
     color: var(--color-text);
@@ -139,7 +144,7 @@ a:hover {
 
 .btn-outline:hover {
     background: var(--color-primary);
-    color: white;
+    color: #ffffff;
     transform: translateY(-2px);
 }
 
@@ -151,6 +156,17 @@ a:hover {
 .btn-sm {
     padding: 10px 20px;
     font-size: 0.8rem;
+}
+
+/* Кнопка в футере на тёмном фоне */
+.footer .btn-outline {
+    color: #ffffff;
+    border-color: var(--color-primary);
+}
+
+.footer .btn-outline:hover {
+    background: var(--color-primary);
+    color: #ffffff;
 }
 
 /* ============ Theme Toggle ============ */
@@ -401,6 +417,11 @@ a:hover {
     transition: all var(--transition-fast);
 }
 
+/* Явный цвет для nav-toggle span в тёмной теме */
+[data-theme="dark"] .nav-toggle span {
+    background: var(--color-text);
+}
+
 /* ============ Story Section ============ */
 .story {
     background: var(--color-bg-alt);
@@ -546,6 +567,7 @@ a:hover {
     cursor: pointer;
     transition: all var(--transition-normal);
     font-family: var(--font-body);
+    color: var(--color-text); /* явно задаём цвет текста */
 }
 
 .timeline-tab:hover {
@@ -868,6 +890,11 @@ a:hover {
     transition: color var(--transition-fast);
 }
 
+/* faq-question в тёмной теме */
+[data-theme="dark"] .faq-question {
+    color: var(--color-text);
+}
+
 .faq-question:hover {
     color: var(--color-primary);
 }
@@ -1094,19 +1121,20 @@ a:hover {
     font-family: var(--font-body);
     font-size: 0.9rem;
     font-weight: 500;
-    color: var(--color-text);
+    color: var(--color-text); /* явно задаём цвет */
     transition: all var(--transition-normal);
     text-align: center;
 }
 
 .role-btn:hover {
     border-color: var(--color-primary);
+    color: var(--color-text);
 }
 
 .role-btn.active {
     background: var(--color-primary);
     border-color: var(--color-primary);
-    color: white;
+    color: #ffffff; /* белый текст на цветном фоне */
 }
 
 .member-fields {
