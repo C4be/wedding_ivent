@@ -63,7 +63,7 @@ services:
     build: ./site
     container_name: wedding-site-dev
     ports:
-      - "5001:5000"
+      - "5000:5000"
     volumes:
       - ./site:/app
     environment:

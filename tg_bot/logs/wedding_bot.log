@@ -483,3 +483,7 @@ For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/St
 2026-03-11 13:43:08 | INFO     | wedding_bot | Запуск свадебного бота...
 2026-03-11 13:43:08 | INFO     | wedding_bot | Веб-сервер запущен на порту 5555
 2026-03-11 13:43:08 | INFO     | wedding_bot | Бот запущен. Нажмите Ctrl+C, чтобы остановить.
+2026-03-11 14:33:40 | INFO     | wedding_bot | Бот остановлен.
+2026-03-11 14:34:58 | INFO     | wedding_bot | Запуск свадебного бота...
+2026-03-11 14:34:58 | INFO     | wedding_bot | Веб-сервер запущен на порту 5555
+2026-03-11 14:34:58 | INFO     | wedding_bot | Бот запущен. Нажмите Ctrl+C, чтобы остановить.
