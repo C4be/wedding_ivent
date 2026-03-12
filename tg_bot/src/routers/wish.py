@@ -131,10 +131,25 @@ async def step_restrictions(message: Message, state: FSMContext) -> None:
 # Отправка на сервер
 # ---------------------------------------------------------------------------
 
+async def _update_member_info(member_id: int, user, chat_id: int) -> None:
+    """Обновляет telegram_id, chat_id и tg_username участника если они отсутствуют или некорректны."""
+    tg_username = f"@{user.username}" if user.username else f"@tg_{user.id}"
+    try:
+        async with AsyncHTTPClient(base_url=settings.DB_SERVICE_URL) as client:
+            await client.patch(f"/members/{member_id}/telegram-id", params={"telegram_id": user.id})
+            await client.patch(f"/members/{member_id}/chat-id", params={"chat_id": chat_id})
+            if user.username:
+                # Обновляем tg_username только если у пользователя есть реальный username
+                await client.patch(f"/members/{member_id}/tg-username", params={"tg_username": tg_username})
+        logger.info("Обновлена информация участника %s: telegram_id=%s, chat_id=%s", member_id, user.id, chat_id)
+    except Exception:
+        logger.exception("Не удалось обновить информацию участника %s", member_id)
+
+
 async def _submit_wish(
     message: Message,
     state: FSMContext,
-    user,   # User object вместо просто username
+    user,
     extra_text: str | None,
 ) -> None:
     data = await state.get_data()
@@ -146,7 +161,6 @@ async def _submit_wish(
 
     drinks = data.get("drinks")
 
-    # Тот же fallback что и при регистрации
     if user.username:
         tg_username = f"@{user.username}" if not user.username.startswith("@") else user.username
     else:
@@ -160,25 +174,107 @@ async def _submit_wish(
 
     await state.clear()
 
-    try:
-        url_username = tg_username
+    async def _post_wish(username: str) -> None:
         async with AsyncHTTPClient(base_url=settings.DB_SERVICE_URL) as client:
-            resp = await client.post(f"/wishes/by-tg/{url_username}", json=payload)
-        logger.info("Пожелание от %s отправлено успешно, статус %s", tg_username, resp.status_code)
+            resp = await client.post(f"/wishes/by-tg/{username}", json=payload)
+        logger.info("Пожелание от %s отправлено успешно, статус %s", username, resp.status_code)
+
+    _not_registered_text = (
+        "Не нашли вас в списке гостей. "
+        "Пожалуйста, сначала зарегистрируйтесь с помощью /start."
+    )
+
+    # 1. Пробуем по tg_username из Telegram-профиля
+    try:
+        await _post_wish(tg_username)
+        await message.answer(
+            "💌 <b>Ваши пожелания успешно отправлены!</b>\n"
+            "Спасибо, мы обязательно постараемся их учесть 🎉"
+        )
+        return
+    except httpx.HTTPStatusError as exc:
+        if exc.response.status_code != 404:
+            logger.error("HTTP ошибка при отправке пожелания %s: %s", tg_username, exc.response.status_code)
+            await message.answer(f"Ошибка сервиса ({exc.response.status_code}). Попробуйте позже.")
+            return
+        logger.warning("Не найден по tg_username=%s, пробуем telegram_id=%s", tg_username, user.id)
+    except Exception:
+        logger.exception("Сетевая ошибка при отправке пожелания %s", tg_username)
+        await message.answer("Не удалось связаться с сервисом. Попробуйте позже.")
+        return
+
+    # 2. Ищем участника по telegram_id → берём его tg_username из БД
+    db_username: str | None = None
+    member_id: int | None = None
+    try:
+        async with AsyncHTTPClient(base_url=settings.DB_SERVICE_URL) as client:
+            resp = await client.get(f"/members/by-telegram-id/{user.id}")
+            member = resp.json()
+        db_username = member.get("tg_username") or None
+        member_id = member.get("id")
+        logger.info("Найден по telegram_id=%s, db tg_username=%s", user.id, db_username)
+    except httpx.HTTPStatusError as exc:
+        if exc.response.status_code != 404:
+            logger.error("HTTP ошибка при поиске по telegram_id=%s: %s", user.id, exc.response.status_code)
+            await message.answer("Не удалось связаться с сервисом. Попробуйте позже.")
+            return
+        logger.warning("Не найден по telegram_id=%s, пробуем по имени/фамилии", user.id)
+    except Exception:
+        logger.exception("Сетевая ошибка при поиске по telegram_id=%s", user.id)
+        await message.answer("Не удалось связаться с сервисом. Попробуйте позже.")
+        return
+
+    # 3. Если не нашли по telegram_id — ищем по имени и фамилии из Telegram-профиля
+    found_by_name = False
+    if not db_username:
+        tg_first = (user.first_name or "").strip()
+        tg_last = (user.last_name or "").strip()
+        if tg_first or tg_last:
+            try:
+                async with AsyncHTTPClient(base_url=settings.DB_SERVICE_URL) as client:
+                    resp = await client.get(
+                        "/members/by-name",
+                        params={"first_name": tg_first, "second_name": tg_last},
+                    )
+                    member = resp.json()
+                db_username = member.get("tg_username") or None
+                member_id = member.get("id")
+                found_by_name = True
+                logger.info("Найден по имени '%s %s', db tg_username=%s, id=%s", tg_first, tg_last, db_username, member_id)
+            except httpx.HTTPStatusError as exc:
+                if exc.response.status_code != 404:
+                    logger.error(
+                        "HTTP ошибка при поиске по имени '%s %s': %s",
+                        tg_first, tg_last, exc.response.status_code,
+                    )
+                    await message.answer("Не удалось связаться с сервисом. Попробуйте позже.")
+                    return
+                logger.warning("Не найден по имени '%s %s'", tg_first, tg_last)
+            except Exception:
+                logger.exception("Сетевая ошибка при поиске по имени '%s %s'", tg_first, tg_last)
+                await message.answer("Не удалось связаться с сервисом. Попробуйте позже.")
+                return
+
+    if not db_username or not member_id:
+        await message.answer(_not_registered_text)
+        return
+
+    # Если нашли через fallback — обновляем информацию участника
+    if found_by_name:
+        await _update_member_info(member_id, user, message.chat.id)
+        # После обновления используем актуальный tg_username
+        db_username = tg_username
+
+    # 4. Повторяем запрос с username из БД
+    try:
+        await _post_wish(db_username)
         await message.answer(
             "💌 <b>Ваши пожелания успешно отправлены!</b>\n"
             "Спасибо, мы обязательно постараемся их учесть 🎉"
         )
     except httpx.HTTPStatusError as exc:
-        status = exc.response.status_code
-        logger.error("HTTP ошибка при отправке пожелания %s: %s", tg_username, status)
-        if status == 404:
-            await message.answer(
-                "Не нашли вас в списке гостей. "
-                "Пожалуйста, сначала зарегистрируйтесь с помощью /start."
-            )
-        else:
-            await message.answer(f"Ошибка сервиса ({status}). Попробуйте позже.")
+        logger.error("HTTP ошибка при повторной отправке пожелания %s: %s", db_username, exc.response.status_code)
+        await message.answer(_not_registered_text)
     except Exception:
-        logger.exception("Сетевая ошибка при отправке пожелания %s", tg_username)
+        logger.exception("Сетевая ошибка при повторной отправке пожелания %s", db_username)
         await message.answer("Не удалось связаться с сервисом. Попробуйте позже.")

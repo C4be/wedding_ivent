@@ -100,6 +100,16 @@ class MembersRepository:
         await self.session.refresh(member)
         return member
 
+    # 4д. Обновить tg_username пользователя
+    async def update_tg_username(self, member_id: int, tg_username: str) -> Optional[Member]:
+        member = await self.session.get(Member, member_id)
+        if member is None:
+            return None
+        member.tg_username = tg_username
+        await self.session.commit()
+        await self.session.refresh(member)
+        return member
+
     # 5. Получить список всех пользователей
     async def get_all_members(self) -> list[Member]:
         result = await self.session.execute(select(Member))
@@ -190,6 +200,13 @@ class MembersRepository:
     async def get_member_by_chat_id(self, chat_id: int) -> Optional[Member]:
         result = await self.session.execute(
             select(Member).where(Member.chat_id == chat_id)
+        )
+        return result.scalar_one_or_none()
+
+    # helper: найти участника по phone_number
+    async def get_member_by_phone_number(self, phone_number: str) -> Optional[Member]:
+        result = await self.session.execute(
+            select(Member).where(Member.phone_number == phone_number)
         )
         return result.scalar_one_or_none()
 

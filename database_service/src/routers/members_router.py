@@ -92,6 +92,19 @@ async def update_chat_id(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
+# 4д. Обновить tg_username
+@router.patch("/{member_id}/tg-username", response_model=MemberRead)
+async def update_tg_username(
+    member_id: int,
+    tg_username: str,
+    service: MembersService = Depends(get_members_service),
+):
+    try:
+        return await service.update_tg_username(member_id, tg_username)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
 # 5. Получить список всех пользователей
 @router.get("/", response_model=List[MemberRead])
 async def get_all_members(
@@ -161,6 +174,31 @@ async def get_member_by_chat_id(
 ):
     try:
         return await service.get_member_by_chat_id(chat_id)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+# 12. Получить участника по phone_number
+@router.get("/by-phone", response_model=MemberRead)
+async def get_member_by_phone_number(
+    phone_number: str,
+    service: MembersService = Depends(get_members_service),
+):
+    try:
+        return await service.get_member_by_phone_number(phone_number)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+# 13. Получить участника по first_name и second_name
+@router.get("/by-name", response_model=MemberRead)
+async def get_member_by_name(
+    first_name: str,
+    second_name: str,
+    service: MembersService = Depends(get_members_service),
+):
+    try:
+        return await service.get_member_by_name(first_name, second_name)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 

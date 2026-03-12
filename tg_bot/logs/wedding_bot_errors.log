@@ -135,3 +135,358 @@ For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/St
 2026-03-11 12:25:17 | ERROR    | wedding_bot | HTTP ошибка при отправке пожелания @C4be74: 400
 2026-03-11 12:27:42 | ERROR    | wedding_bot | HTTP ошибка при отправке пожелания @C4be74: 500
 2026-03-11 12:59:11 | ERROR    | wedding_bot | HTTP ошибка при регистрации @Kkola229: 422
+2026-03-11 17:15:46 | ERROR    | wedding_bot | Ошибка при получении конфигурации сайта
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/httpx/_transports/default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "/usr/local/lib/python3.11/site-packages/httpx/_transports/default.py", line 394, in handle_async_request
+    resp = await self._pool.handle_async_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 256, in handle_async_request
+    raise exc from None
+  File "/usr/local/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 236, in handle_async_request
+    response = await connection.handle_async_request(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpcore/_async/connection.py", line 101, in handle_async_request
+    raise exc
+  File "/usr/local/lib/python3.11/site-packages/httpcore/_async/connection.py", line 78, in handle_async_request
+    stream = await self._connect(request)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpcore/_async/connection.py", line 124, in _connect
+    stream = await self._network_backend.connect_tcp(**kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpcore/_backends/auto.py", line 31, in connect_tcp
+    return await self._backend.connect_tcp(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 113, in connect_tcp
+    with map_exceptions(exc_map):
+  File "/usr/local/lib/python3.11/contextlib.py", line 158, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/usr/local/lib/python3.11/site-packages/httpcore/_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.ConnectError: [Errno -2] Name or service not known
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/app/src/routers/member_days.py", line 16, in _get_config
+    resp = await client.get("/site-config/latest")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/utils/external_services_client.py", line 109, in get
+    return await self.request("GET", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/utils/external_services_client.py", line 105, in request
+    raise last_exc or RuntimeError("Unknown httpx error")
+  File "/app/src/utils/external_services_client.py", line 81, in request
+    resp = await self._client.request(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpx/_client.py", line 1540, in request
+    return await self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpx/_client.py", line 1629, in send
+    response = await self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpx/_client.py", line 1657, in _send_handling_auth
+    response = await self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpx/_client.py", line 1694, in _send_handling_redirects
+    response = await self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpx/_client.py", line 1730, in _send_single_request
+    response = await transport.handle_async_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpx/_transports/default.py", line 393, in handle_async_request
+    with map_httpcore_exceptions():
+  File "/usr/local/lib/python3.11/contextlib.py", line 158, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/usr/local/lib/python3.11/site-packages/httpx/_transports/default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ConnectError: [Errno -2] Name or service not known
+2026-03-11 17:15:46 | ERROR    | wedding_bot | Ошибка при получении конфигурации сайта
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/httpx/_transports/default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "/usr/local/lib/python3.11/site-packages/httpx/_transports/default.py", line 394, in handle_async_request
+    resp = await self._pool.handle_async_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 256, in handle_async_request
+    raise exc from None
+  File "/usr/local/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 236, in handle_async_request
+    response = await connection.handle_async_request(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpcore/_async/connection.py", line 101, in handle_async_request
+    raise exc
+  File "/usr/local/lib/python3.11/site-packages/httpcore/_async/connection.py", line 78, in handle_async_request
+    stream = await self._connect(request)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpcore/_async/connection.py", line 124, in _connect
+    stream = await self._network_backend.connect_tcp(**kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpcore/_backends/auto.py", line 31, in connect_tcp
+    return await self._backend.connect_tcp(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 113, in connect_tcp
+    with map_exceptions(exc_map):
+  File "/usr/local/lib/python3.11/contextlib.py", line 158, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/usr/local/lib/python3.11/site-packages/httpcore/_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.ConnectError: [Errno -2] Name or service not known
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/app/src/routers/member_days.py", line 16, in _get_config
+    resp = await client.get("/site-config/latest")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/utils/external_services_client.py", line 109, in get
+    return await self.request("GET", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/utils/external_services_client.py", line 105, in request
+    raise last_exc or RuntimeError("Unknown httpx error")
+  File "/app/src/utils/external_services_client.py", line 81, in request
+    resp = await self._client.request(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpx/_client.py", line 1540, in request
+    return await self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpx/_client.py", line 1629, in send
+    response = await self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpx/_client.py", line 1657, in _send_handling_auth
+    response = await self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpx/_client.py", line 1694, in _send_handling_redirects
+    response = await self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpx/_client.py", line 1730, in _send_single_request
+    response = await transport.handle_async_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpx/_transports/default.py", line 393, in handle_async_request
+    with map_httpcore_exceptions():
+  File "/usr/local/lib/python3.11/contextlib.py", line 158, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/usr/local/lib/python3.11/site-packages/httpx/_transports/default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ConnectError: [Errno -2] Name or service not known
+2026-03-11 17:15:46 | ERROR    | wedding_bot | Ошибка при получении конфигурации сайта
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/httpx/_transports/default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "/usr/local/lib/python3.11/site-packages/httpx/_transports/default.py", line 394, in handle_async_request
+    resp = await self._pool.handle_async_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 256, in handle_async_request
+    raise exc from None
+  File "/usr/local/lib/python3.11/site-packages/httpcore/_async/connection_pool.py", line 236, in handle_async_request
+    response = await connection.handle_async_request(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpcore/_async/connection.py", line 101, in handle_async_request
+    raise exc
+  File "/usr/local/lib/python3.11/site-packages/httpcore/_async/connection.py", line 78, in handle_async_request
+    stream = await self._connect(request)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpcore/_async/connection.py", line 124, in _connect
+    stream = await self._network_backend.connect_tcp(**kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpcore/_backends/auto.py", line 31, in connect_tcp
+    return await self._backend.connect_tcp(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpcore/_backends/anyio.py", line 113, in connect_tcp
+    with map_exceptions(exc_map):
+  File "/usr/local/lib/python3.11/contextlib.py", line 158, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/usr/local/lib/python3.11/site-packages/httpcore/_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.ConnectError: [Errno -2] Name or service not known
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/app/src/routers/member_days.py", line 16, in _get_config
+    resp = await client.get("/site-config/latest")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/utils/external_services_client.py", line 109, in get
+    return await self.request("GET", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/utils/external_services_client.py", line 105, in request
+    raise last_exc or RuntimeError("Unknown httpx error")
+  File "/app/src/utils/external_services_client.py", line 81, in request
+    resp = await self._client.request(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpx/_client.py", line 1540, in request
+    return await self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpx/_client.py", line 1629, in send
+    response = await self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpx/_client.py", line 1657, in _send_handling_auth
+    response = await self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpx/_client.py", line 1694, in _send_handling_redirects
+    response = await self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpx/_client.py", line 1730, in _send_single_request
+    response = await transport.handle_async_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/httpx/_transports/default.py", line 393, in handle_async_request
+    with map_httpcore_exceptions():
+  File "/usr/local/lib/python3.11/contextlib.py", line 158, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/usr/local/lib/python3.11/site-packages/httpx/_transports/default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ConnectError: [Errno -2] Name or service not known
+2026-03-12 07:07:12 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов: Client error '422 Unprocessable Entity' for url 'http://wedding-db-service:8000/members/tg_username?username=C4be74'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/422
+2026-03-12 07:07:12 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов по имени: Client error '405 Method Not Allowed' for url 'http://wedding-db-service:8000/members/by-name?first_name=%D0%94%D0%B8%D0%BC%D0%B0&second_name=%D0%93%D0%B8%D0%BC%D0%B0%D0%B7%D0%B5%D1%82%D0%B4%D0%B8%D0%BD%D0%BE%D0%B2'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
+2026-03-12 07:09:08 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов: Client error '422 Unprocessable Entity' for url 'http://wedding-db-service:8000/members/tg_username?username=%40C4be74'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/422
+2026-03-12 07:09:08 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов по имени: Client error '405 Method Not Allowed' for url 'http://wedding-db-service:8000/members/by-name?first_name=%D0%94%D0%B8%D0%BC%D0%B0&second_name=%D0%93%D0%B8%D0%BC%D0%B0%D0%B7%D0%B5%D1%82%D0%B4%D0%B8%D0%BD%D0%BE%D0%B2'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
+2026-03-12 07:09:12 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов: Client error '422 Unprocessable Entity' for url 'http://wedding-db-service:8000/members/tg_username?username=%40C4be74'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/422
+2026-03-12 07:09:12 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов по имени: Client error '405 Method Not Allowed' for url 'http://wedding-db-service:8000/members/by-name?first_name=%D0%94%D0%B8%D0%BC%D0%B0&second_name=%D0%93%D0%B8%D0%BC%D0%B0%D0%B7%D0%B5%D1%82%D0%B4%D0%B8%D0%BD%D0%BE%D0%B2'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
+2026-03-12 07:09:14 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов: Client error '422 Unprocessable Entity' for url 'http://wedding-db-service:8000/members/tg_username?username=%40C4be74'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/422
+2026-03-12 07:09:15 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов по имени: Client error '405 Method Not Allowed' for url 'http://wedding-db-service:8000/members/by-name?first_name=%D0%94%D0%B8%D0%BC%D0%B0&second_name=%D0%93%D0%B8%D0%BC%D0%B0%D0%B7%D0%B5%D1%82%D0%B4%D0%B8%D0%BD%D0%BE%D0%B2'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
+2026-03-12 07:11:35 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов: Client error '422 Unprocessable Entity' for url 'http://wedding-db-service:8000/members/tg_username?username=%40C4be74'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/422
+2026-03-12 07:11:35 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов по имени: Client error '405 Method Not Allowed' for url 'http://wedding-db-service:8000/members/by-name?first_name=%D0%94%D0%B8%D0%BC%D0%B0&second_name=%D0%93%D0%B8%D0%BC%D0%B0%D0%B7%D0%B5%D1%82%D0%B4%D0%B8%D0%BD%D0%BE%D0%B2'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
+2026-03-12 07:14:12 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов: Client error '422 Unprocessable Entity' for url 'http://wedding-db-service:8000/members/tg_username?username=%40C4be74'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/422
+2026-03-12 07:14:12 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов по имени: Client error '405 Method Not Allowed' for url 'http://wedding-db-service:8000/members/by-name?first_name=%D0%94%D0%B8%D0%BC%D0%B0&second_name=%D0%93%D0%B8%D0%BC%D0%B0%D0%B7%D0%B5%D1%82%D0%B4%D0%B8%D0%BD%D0%BE%D0%B2'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
+2026-03-12 07:17:36 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов: Client error '422 Unprocessable Entity' for url 'http://wedding-db-service:8000/members/tg_username?username=%40C4be74'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/422
+2026-03-12 07:17:36 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов по имени: Client error '405 Method Not Allowed' for url 'http://wedding-db-service:8000/members/by-name?first_name=%D0%94%D0%B8%D0%BC%D0%B0&second_name=%D0%93%D0%B8%D0%BC%D0%B0%D0%B7%D0%B5%D1%82%D0%B4%D0%B8%D0%BD%D0%BE%D0%B2'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
+2026-03-12 07:17:41 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов: Client error '422 Unprocessable Entity' for url 'http://wedding-db-service:8000/members/tg_username?username=%40C4be74'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/422
+2026-03-12 07:17:41 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов по имени: Client error '405 Method Not Allowed' for url 'http://wedding-db-service:8000/members/by-name?first_name=%D0%94%D0%B8%D0%BC%D0%B0&second_name=%D0%93%D0%B8%D0%BC%D0%B0%D0%B7%D0%B5%D1%82%D0%B4%D0%B8%D0%BD%D0%BE%D0%B2'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
+2026-03-12 07:18:21 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов: Client error '422 Unprocessable Entity' for url 'http://wedding-db-service:8000/members/tg_username?username=%40C4be74'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/422
+2026-03-12 07:18:21 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов по имени: Client error '405 Method Not Allowed' for url 'http://wedding-db-service:8000/members/by-name?first_name=%D0%94%D0%B8%D0%BC%D0%B0&second_name=%D0%93%D0%B8%D0%BC%D0%B0%D0%B7%D0%B5%D1%82%D0%B4%D0%B8%D0%BD%D0%BE%D0%B2'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
+2026-03-12 07:18:26 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов: Client error '422 Unprocessable Entity' for url 'http://wedding-db-service:8000/members/tg_username?username=%40C4be74'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/422
+2026-03-12 07:18:26 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов по имени: Client error '405 Method Not Allowed' for url 'http://wedding-db-service:8000/members/by-name?first_name=%D0%94%D0%B8%D0%BC%D0%B0&second_name=%D0%93%D0%B8%D0%BC%D0%B0%D0%B7%D0%B5%D1%82%D0%B4%D0%B8%D0%BD%D0%BE%D0%B2'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
+2026-03-12 07:21:11 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов: Client error '422 Unprocessable Entity' for url 'http://wedding-db-service:8000/members/tg_username?username=%40C4be74'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/422
+2026-03-12 07:21:11 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов по имени: Client error '405 Method Not Allowed' for url 'http://wedding-db-service:8000/members/by-name?first_name=%D0%94%D0%B8%D0%BC%D0%B0&second_name=%D0%93%D0%B8%D0%BC%D0%B0%D0%B7%D0%B5%D1%82%D0%B4%D0%B8%D0%BD%D0%BE%D0%B2'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/405
+2026-03-12 07:27:11 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов: Client error '422 Unprocessable Entity' for url 'http://wedding-db-service:8000/members/tg_username?username=%40C4be74'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/422
+2026-03-12 07:27:14 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов: Client error '422 Unprocessable Entity' for url 'http://wedding-db-service:8000/members/tg_username?username=%40C4be74'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/422
+2026-03-12 07:40:55 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов: Client error '404 Not Found' for url 'http://wedding-db-service:8000/members/tg_username?tg_username=%40C4be74'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+2026-03-12 07:43:06 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов: Client error '404 Not Found' for url 'http://wedding-db-service:8000/members/tg_username?tg_username=%40C4be74'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+2026-03-12 07:43:07 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов по имени: Client error '404 Not Found' for url 'http://wedding-db-service:8000/members/by-name?first_name=%D0%94%D0%B8%D0%BC%D0%B0&second_name=%D0%93%D0%B8%D0%BC%D0%B0%D0%B7%D0%B5%D1%82%D0%B4%D0%B8%D0%BD%D0%BE%D0%B2'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+2026-03-12 07:44:18 | ERROR    | wedding_bot | Не удалось обновить telegram_id/chat_id для участника 3
+Traceback (most recent call last):
+  File "/app/src/routers/member_join.py", line 188, in _send_registration
+    await client.patch(
+  File "/app/src/utils/external_services_client.py", line 118, in patch
+    return await self.request("PATCH", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/utils/external_services_client.py", line 91, in request
+    resp.raise_for_status()
+  File "/usr/local/lib/python3.11/site-packages/httpx/_models.py", line 829, in raise_for_status
+    raise HTTPStatusError(message, request=request, response=self)
+httpx.HTTPStatusError: Server error '500 Internal Server Error' for url 'http://wedding-db-service:8000/members/3/telegram-id?telegram_id=1163267317'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500
+2026-03-12 08:53:59 | ERROR    | wedding_bot | Ошибка при получении конфигурации сайта
+Traceback (most recent call last):
+  File "/app/src/routers/member_days.py", line 16, in _get_config
+    resp = await client.get("/site-config/latest")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/utils/external_services_client.py", line 109, in get
+    return await self.request("GET", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/utils/external_services_client.py", line 91, in request
+    resp.raise_for_status()
+  File "/usr/local/lib/python3.11/site-packages/httpx/_models.py", line 829, in raise_for_status
+    raise HTTPStatusError(message, request=request, response=self)
+httpx.HTTPStatusError: Client error '404 Not Found' for url 'http://wedding-db-service:8000/site-config/latest'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+2026-03-12 08:54:02 | ERROR    | wedding_bot | Ошибка при получении конфигурации сайта
+Traceback (most recent call last):
+  File "/app/src/routers/member_days.py", line 16, in _get_config
+    resp = await client.get("/site-config/latest")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/utils/external_services_client.py", line 109, in get
+    return await self.request("GET", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/utils/external_services_client.py", line 91, in request
+    resp.raise_for_status()
+  File "/usr/local/lib/python3.11/site-packages/httpx/_models.py", line 829, in raise_for_status
+    raise HTTPStatusError(message, request=request, response=self)
+httpx.HTTPStatusError: Client error '404 Not Found' for url 'http://wedding-db-service:8000/site-config/latest'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+2026-03-12 08:54:15 | ERROR    | wedding_bot | HTTP ошибка при отправке пожелания @Sirena229: 400
+2026-03-12 08:55:07 | ERROR    | wedding_bot | HTTP ошибка при отправке пожелания @Sirena229: 400
+2026-03-12 08:55:41 | ERROR    | wedding_bot | HTTP ошибка при отправке пожелания @Sirena229: 400
+2026-03-12 09:01:42 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов: Client error '404 Not Found' for url 'http://wedding-db-service:8000/members/tg_username?tg_username=%40C4be74'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+2026-03-12 09:02:13 | ERROR    | wedding_bot | HTTP ошибка при отправке пожелания @Sirena229: 400
+2026-03-12 09:02:25 | ERROR    | wedding_bot | HTTP ошибка при отправке пожелания @Sirena229: 400
+2026-03-12 09:07:18 | ERROR    | wedding_bot | HTTP ошибка при отправке пожелания @Sirena229: 400
+2026-03-12 09:21:33 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов: Client error '404 Not Found' for url 'http://wedding-db-service:8000/members/tg_username?tg_username=%40C4be74'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+2026-03-12 09:21:34 | ERROR    | wedding_bot | Не удалось обновить информацию участника 3
+Traceback (most recent call last):
+  File "/app/src/routers/member_join.py", line 215, in _update_member_info
+    await client.patch(f"/members/{member_id}/telegram-id", params={"telegram_id": user.id})
+  File "/app/src/utils/external_services_client.py", line 118, in patch
+    return await self.request("PATCH", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/utils/external_services_client.py", line 91, in request
+    resp.raise_for_status()
+  File "/usr/local/lib/python3.11/site-packages/httpx/_models.py", line 829, in raise_for_status
+    raise HTTPStatusError(message, request=request, response=self)
+httpx.HTTPStatusError: Server error '500 Internal Server Error' for url 'http://wedding-db-service:8000/members/3/telegram-id?telegram_id=1163267317'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500
+2026-03-12 09:25:52 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов: Client error '404 Not Found' for url 'http://wedding-db-service:8000/members/tg_username?tg_username=%40C4be74'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+2026-03-12 09:25:52 | ERROR    | wedding_bot | Не удалось обновить информацию участника 3
+Traceback (most recent call last):
+  File "/app/src/routers/member_join.py", line 218, in _update_member_info
+    await client.patch(f"/members/{member_id}/tg-username", params={"tg_username": tg_username})
+  File "/app/src/utils/external_services_client.py", line 118, in patch
+    return await self.request("PATCH", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/utils/external_services_client.py", line 91, in request
+    resp.raise_for_status()
+  File "/usr/local/lib/python3.11/site-packages/httpx/_models.py", line 829, in raise_for_status
+    raise HTTPStatusError(message, request=request, response=self)
+httpx.HTTPStatusError: Client error '404 Not Found' for url 'http://wedding-db-service:8000/members/3/tg-username?tg_username=%40C4be74'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+2026-03-12 09:30:42 | ERROR    | wedding_bot | Исключение при запросе к БД для Дима Гимазетдинов: Client error '404 Not Found' for url 'http://wedding-db-service:8000/members/tg_username?tg_username=%40C4be74'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+2026-03-12 09:31:34 | ERROR    | wedding_bot | HTTP ошибка при отправке пожелания @Sirena229: 400
+2026-03-12 09:31:44 | ERROR    | wedding_bot | Исключение при запросе к БД для Кирилл None: Client error '404 Not Found' for url 'http://wedding-db-service:8000/members/tg_username?tg_username=%40Sirena229'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+2026-03-12 09:31:44 | ERROR    | wedding_bot | Исключение при запросе к БД для Кирилл None по имени: Client error '404 Not Found' for url 'http://wedding-db-service:8000/members/by-name?first_name=%D0%9A%D0%B8%D1%80%D0%B8%D0%BB%D0%BB&second_name='
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+2026-03-12 09:32:05 | ERROR    | wedding_bot | Не удалось обновить telegram_id/chat_id для участника 13
+Traceback (most recent call last):
+  File "/app/src/routers/member_join.py", line 188, in _send_registration
+    await client.patch(
+  File "/app/src/utils/external_services_client.py", line 118, in patch
+    return await self.request("PATCH", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/src/utils/external_services_client.py", line 91, in request
+    resp.raise_for_status()
+  File "/usr/local/lib/python3.11/site-packages/httpx/_models.py", line 829, in raise_for_status
+    raise HTTPStatusError(message, request=request, response=self)
+httpx.HTTPStatusError: Server error '500 Internal Server Error' for url 'http://wedding-db-service:8000/members/13/telegram-id?telegram_id=1949765943'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500
+2026-03-12 09:33:54 | ERROR    | wedding_bot | HTTP ошибка при отправке пожелания @Sirena230: 400

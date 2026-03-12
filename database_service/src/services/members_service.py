@@ -74,6 +74,15 @@ class MembersService:
         logging.info("chat_id updated for member id=%s", member_id)
         return member
 
+    async def update_tg_username(self, member_id: int, tg_username: str) -> Member:
+        logging.info("Updating tg_username=%s for member id=%s", tg_username, member_id)
+        member = await self.repo.update_tg_username(member_id, tg_username)
+        if member is None:
+            logging.warning("Member not found for tg_username update: id=%s", member_id)
+            raise ValueError(f"Member with id={member_id} not found")
+        logging.info("tg_username updated for member id=%s", member_id)
+        return member
+
     async def get_all_members(self) -> List[Member]:
         logging.info("Fetching all members")
         members = await self.repo.get_all_members()
@@ -126,6 +135,24 @@ class MembersService:
             logging.warning("Member not found by chat_id=%s", chat_id)
             raise ValueError(f"Member with chat_id={chat_id} not found")
         logging.info("Member found: id=%s, chat_id=%s", member.id, chat_id)
+        return member
+
+    async def get_member_by_phone_number(self, phone_number: str) -> Member:
+        logging.info("Fetching member by phone_number=%s", phone_number)
+        member = await self.repo.get_member_by_phone_number(phone_number)
+        if member is None:
+            logging.warning("Member not found by phone_number=%s", phone_number)
+            raise ValueError(f"Member with phone_number='{phone_number}' not found")
+        logging.info("Member found: id=%s, phone_number=%s", member.id, phone_number)
+        return member
+
+    async def get_member_by_name(self, first_name: str, second_name: str) -> Member:
+        logging.info("Fetching member by name=%s %s", first_name, second_name)
+        member = await self.repo.get_member_by_name(first_name, second_name)
+        if member is None:
+            logging.warning("Member not found by name=%s %s", first_name, second_name)
+            raise ValueError(f"Member with name='{first_name} {second_name}' not found")
+        logging.info("Member found: id=%s, name=%s %s", member.id, first_name, second_name)
         return member
 
 
