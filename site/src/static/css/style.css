@@ -1349,6 +1349,15 @@ input[type="file"]:focus {
     color: var(--color-primary);
 }
 
+.footer-date a {
+    color: inherit;
+    transition: color var(--transition-fast);
+}
+
+.footer-date a:hover {
+    color: #ff0000;
+}
+
 /* ============ Toast Notification ============ */
 .toast {
     position: fixed;
