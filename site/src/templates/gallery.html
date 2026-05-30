@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Семейная галерея | {{ config.meta.title }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;600&family=Playfair+Display:wght@400;600&family=Lora:wght@400;500;600&family=Manrope:wght@300;400;500;600&family=Nunito+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        :root {
+            --color-primary: {{ theme_payload.primary_color }};
+            --color-secondary: {{ theme_payload.secondary_color }};
+            --color-accent: {{ theme_payload.accent_color }};
+            --color-bg: {{ theme_payload.light_bg }};
+            --font-display: '{{ theme_payload.display_font }}', {{ theme_payload.display_font_fallback }};
+            --font-body: '{{ theme_payload.body_font }}', {{ theme_payload.body_font_fallback }};
+        }
+
+        [data-theme="dark"] {
+            --color-bg: {{ theme_payload.dark_bg }};
+        }
+
+        .page-shell {
+            min-height: 100vh;
+            padding: 30px 0 60px;
+            background: linear-gradient(180deg, var(--color-bg) 0%, var(--color-accent) 100%);
+        }
+
+        .page-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            gap: 10px;
+        }
+
+        .page-card {
+            background: var(--color-bg-alt);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            padding: 22px;
+            margin-bottom: 14px;
+        }
+
+        .page-card h2 {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .upload-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .upload-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .upload-actions .btn {
+            min-width: 200px;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 12px;
+        }
+
+        .gallery-card {
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            position: relative;
+            cursor: zoom-in;
+        }
+
+        .gallery-card img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .gallery-card .photo-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: flex-end;
+            justify-content: stretch;
+            padding: 12px;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 0.75) 100%);
+            color: #fff;
+            font-size: 0.86rem;
+            opacity: 0;
+            transition: opacity var(--transition-normal);
+            pointer-events: none;
+        }
+
+        .photo-overlay-inner {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .photo-download-btn {
+            pointer-events: auto;
+            min-width: auto;
+            padding: 8px 10px;
+            font-size: 0.74rem;
+            letter-spacing: 0.4px;
+        }
+
+        .gallery-card:hover .photo-overlay,
+        .gallery-card:focus-within .photo-overlay {
+            opacity: 1;
+        }
+
+        .gallery-card footer {
+            padding: 8px 10px;
+            font-size: 0.8rem;
+            color: var(--color-text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .collage-grid {
+            columns: 4 220px;
+            column-gap: 12px;
+        }
+
+        .collage-item {
+            break-inside: avoid;
+            margin-bottom: 12px;
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            border: 1px solid var(--color-border);
+            background: var(--color-bg);
+            position: relative;
+            cursor: zoom-in;
+        }
+
+        .collage-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .collage-item .photo-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: flex-end;
+            padding: 10px;
+            color: #fff;
+            font-size: 0.82rem;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 0.75) 100%);
+            opacity: 0;
+            transition: opacity var(--transition-normal);
+            pointer-events: none;
+        }
+
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            z-index: 2500;
+            background: rgba(0, 0, 0, 0.88);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .lightbox[hidden] {
+            display: none;
+        }
+
+        .lightbox-content {
+            position: relative;
+            width: min(100%, 1080px);
+            max-height: 92vh;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+            background: #000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .lightbox-image-wrap {
+            width: 100%;
+            height: min(80vh, 820px);
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lightbox-image-wrap img {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .lightbox-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            color: #fff;
+            background: rgba(0, 0, 0, 0.55);
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 42px;
+            height: 42px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.18);
+            color: #fff;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .lightbox-close:hover {
+            background: rgba(255, 255, 255, 0.28);
+        }
+
+        .collage-item:hover .photo-overlay,
+        .collage-item:focus-within .photo-overlay {
+            opacity: 1;
+        }
+
+        .download-actions {
+            margin-top: 14px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        @media (max-width: 768px) {
+            .upload-row {
+                grid-template-columns: 1fr;
+            }
+
+            .page-top {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .upload-actions .btn {
+                width: 100%;
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-shell">
+        <div class="container">
+            <div class="page-top">
+                <h1 class="section-title" style="margin:0; text-align:left;">Семейная галерея</h1>
+                <a href="/" class="btn btn-outline">На главную</a>
+            </div>
+
+            <div class="page-card">
+                <h2>Ваши фото</h2>
+                <p class="section-subtitle" style="text-align:left; margin-top:0;">
+                    Для одной семьи можно загрузить до <strong id="limitLabel">{{ gallery_settings.gallery_max_uploads_per_family }}</strong> фото.
+                </p>
+
+                <div class="upload-row">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label for="headFirstName">Имя главы семьи</label>
+                        <input type="text" id="headFirstName" placeholder="Имя">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label for="headSecondName">Фамилия главы семьи</label>
+                        <input type="text" id="headSecondName" placeholder="Фамилия">
+                    </div>
+                </div>
+
+                <div class="upload-actions">
+                    <button type="button" class="btn btn-outline" id="loadGalleryBtn">Открыть галерею семьи</button>
+                </div>
+
+                <div class="upload-actions">
+                    <input type="file" id="familyImageInput" accept=".jpg,.jpeg,.png,.gif,.webp" />
+                    <button type="button" class="btn btn-primary" id="uploadImageBtn">Загрузить фото</button>
+                </div>
+
+                <p id="familySummary" class="family-key-hint">Введите имя и фамилию главы семьи, чтобы увидеть ваши фотографии.</p>
+            </div>
+
+            <div class="page-card">
+                <h2>Фотографии вашей семьи</h2>
+                <div class="gallery-grid" id="familyGalleryGrid">
+                    <p class="family-members-empty">Фотографии пока не загружены.</p>
+                </div>
+            </div>
+
+            <div class="page-card">
+                <h2>Общий коллаж всех гостей</h2>
+                <div class="collage-grid" id="globalCollageGrid">
+                    {% if collage_images and collage_images|length > 0 %}
+                        {% for image in collage_images %}
+                            <article class="collage-item" tabindex="0">
+                                <img src="{{ image.url }}" alt="Фото гостей" loading="lazy" class="open-photo-image" data-photo-url="{{ image.url }}" data-photo-name="{{ image.original_name or image.filename }}" data-photo-author="{{ image.photographer_name }}">
+                                <div class="photo-overlay">
+                                    <div class="photo-overlay-inner">
+                                        <span>Снял(а): {{ image.photographer_name }}</span>
+                                        <a class="btn btn-outline btn-sm photo-download-btn" href="{{ image.url }}" download="{{ image.original_name or image.filename }}">Скачать</a>
+                                    </div>
+                                </div>
+                            </article>
+                        {% endfor %}
+                    {% else %}
+                        <p class="family-members-empty">Коллаж пока пуст.</p>
+                    {% endif %}
+                </div>
+                <div class="download-actions">
+                    <a href="/api/family-gallery/download" class="btn btn-primary" id="downloadGalleryBtn">Скачать все фото (ZIP)</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"><span class="toast-message"></span></div>
+
+    <div class="lightbox" id="photoLightbox" hidden>
+        <div class="lightbox-content" id="photoLightboxContent">
+            <button type="button" class="lightbox-close" id="photoLightboxClose" aria-label="Закрыть">✕</button>
+            <div class="lightbox-image-wrap">
+                <img id="photoLightboxImage" src="" alt="Просмотр фото">
+            </div>
+            <div class="lightbox-footer">
+                <div>
+                    <strong id="photoLightboxName">Фото</strong><br>
+                    <span id="photoLightboxAuthor">Снял(а): -</span>
+                </div>
+                <a id="photoLightboxDownload" class="btn btn-outline btn-sm" href="#" download>Скачать</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const headFirstInput = document.getElementById('headFirstName');
+            const headSecondInput = document.getElementById('headSecondName');
+            const loadBtn = document.getElementById('loadGalleryBtn');
+            const uploadInput = document.getElementById('familyImageInput');
+            const uploadBtn = document.getElementById('uploadImageBtn');
+            const grid = document.getElementById('familyGalleryGrid');
+            const summary = document.getElementById('familySummary');
+            const limitLabel = document.getElementById('limitLabel');
+            const globalCollageGrid = document.getElementById('globalCollageGrid');
+            const lightbox = document.getElementById('photoLightbox');
+            const lightboxContent = document.getElementById('photoLightboxContent');
+            const lightboxClose = document.getElementById('photoLightboxClose');
+            const lightboxImage = document.getElementById('photoLightboxImage');
+            const lightboxName = document.getElementById('photoLightboxName');
+            const lightboxAuthor = document.getElementById('photoLightboxAuthor');
+            const lightboxDownload = document.getElementById('photoLightboxDownload');
+            const downloadGalleryBtn = document.getElementById('downloadGalleryBtn');
+
+            let currentImages = [];
+            let uploadLimit = Number(limitLabel.textContent) || 0;
+
+            function showToast(message, type = 'success') {
+                const toast = document.getElementById('toast');
+                const toastMessage = toast.querySelector('.toast-message');
+                toastMessage.textContent = message;
+                toast.className = `toast ${type} show`;
+                setTimeout(() => toast.classList.remove('show'), 4000);
+            }
+
+            function getHeadPayload() {
+                return {
+                    head_first_name: String(headFirstInput.value || '').trim(),
+                    head_second_name: String(headSecondInput.value || '').trim(),
+                };
+            }
+
+            function renderImages(images) {
+                currentImages = Array.isArray(images) ? images : [];
+                if (!currentImages.length) {
+                    grid.innerHTML = '<p class="family-members-empty">Фотографии пока не загружены.</p>';
+                    return;
+                }
+
+                grid.innerHTML = currentImages.map((image) => `
+                    <article class="gallery-card">
+                        <img src="${image.url}" alt="Семейное фото" loading="lazy" class="open-photo-image" data-photo-url="${image.url}" data-photo-name="${image.original_name || image.filename}" data-photo-author="${image.photographer_name || 'Гость'}">
+                        <div class="photo-overlay">
+                            <div class="photo-overlay-inner">
+                                <span>Снял(а): ${image.photographer_name || 'Гость'}</span>
+                                <a class="btn btn-outline btn-sm photo-download-btn" href="${image.url}" download="${image.original_name || image.filename}">Скачать</a>
+                            </div>
+                        </div>
+                        <footer>
+                            <span>${image.original_name || image.filename}</span>
+                            <button type="button" class="btn btn-outline btn-sm delete-image-btn" data-id="${image.id}">Удалить</button>
+                        </footer>
+                    </article>
+                `).join('');
+            }
+
+            function renderGlobalCollage(images) {
+                if (!Array.isArray(images) || !images.length) {
+                    globalCollageGrid.innerHTML = '<p class="family-members-empty">Коллаж пока пуст.</p>';
+                    return;
+                }
+
+                globalCollageGrid.innerHTML = images.map((image) => `
+                    <article class="collage-item" tabindex="0">
+                        <img src="${image.url}" alt="Фото гостей" loading="lazy" class="open-photo-image" data-photo-url="${image.url}" data-photo-name="${image.original_name || image.filename}" data-photo-author="${image.photographer_name || 'Гость'}">
+                        <div class="photo-overlay">
+                            <div class="photo-overlay-inner">
+                                <span>Снял(а): ${image.photographer_name || 'Гость'}</span>
+                                <a class="btn btn-outline btn-sm photo-download-btn" href="${image.url}" download="${image.original_name || image.filename}">Скачать</a>
+                            </div>
+                        </div>
+                    </article>
+                `).join('');
+            }
+
+            function openLightbox(url, name, author) {
+                lightboxImage.src = url;
+                lightboxName.textContent = name || 'Фото';
+                lightboxAuthor.textContent = `Снял(а): ${author || 'Гость'}`;
+                lightboxDownload.href = url;
+                lightboxDownload.setAttribute('download', name || 'photo.jpg');
+                lightbox.hidden = false;
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeLightbox() {
+                lightbox.hidden = true;
+                lightboxImage.src = '';
+                document.body.style.overflow = '';
+            }
+
+            async function loadGlobalCollage() {
+                try {
+                    const response = await fetch('/api/family-gallery/collage');
+                    const data = await response.json().catch(() => ({}));
+                    if (!response.ok || data.status !== 'success') {
+                        return;
+                    }
+                    renderGlobalCollage(data.images || []);
+                } catch (error) {
+                    // no-op
+                }
+            }
+
+            async function loadFamilyGallery() {
+                const payload = getHeadPayload();
+                if (!payload.head_first_name || !payload.head_second_name) {
+                    showToast('Введите имя и фамилию главы семьи.', 'error');
+                    return;
+                }
+
+                loadBtn.disabled = true;
+                loadBtn.textContent = 'Загрузка...';
+                try {
+                    const query = new URLSearchParams(payload);
+                    const response = await fetch(`/api/family-gallery/by-head?${query.toString()}`);
+                    const data = await response.json().catch(() => ({}));
+                    if (!response.ok || data.status !== 'success') {
+                        showToast(data.message || 'Не удалось загрузить галерею.', 'error');
+                        return;
+                    }
+
+                    uploadLimit = Number(data.upload_limit || uploadLimit || 0);
+                    limitLabel.textContent = String(uploadLimit);
+                    summary.classList.add('active');
+                    summary.textContent = `Семья: ${data.family.head_first_name} ${data.family.head_second_name}. Загружено ${data.images.length} из ${uploadLimit}.`;
+                    renderImages(data.images);
+                    await loadGlobalCollage();
+                    showToast('Галерея загружена.', 'success');
+                } catch (error) {
+                    showToast('Ошибка сети. Попробуйте позже.', 'error');
+                } finally {
+                    loadBtn.disabled = false;
+                    loadBtn.textContent = 'Открыть галерею семьи';
+                }
+            }
+
+            async function uploadImage() {
+                const payload = getHeadPayload();
+                const file = uploadInput.files[0];
+                if (!payload.head_first_name || !payload.head_second_name) {
+                    showToast('Введите имя и фамилию главы семьи.', 'error');
+                    return;
+                }
+                if (!file) {
+                    showToast('Выберите фото для загрузки.', 'error');
+                    return;
+                }
+                if (uploadLimit && currentImages.length >= uploadLimit) {
+                    showToast(`Достигнут лимит ${uploadLimit} фото для семьи.`, 'error');
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('head_first_name', payload.head_first_name);
+                formData.append('head_second_name', payload.head_second_name);
+                formData.append('photographer_first_name', payload.head_first_name);
+                formData.append('photographer_second_name', payload.head_second_name);
+                formData.append('image', file);
+
+                uploadBtn.disabled = true;
+                uploadBtn.textContent = 'Загрузка...';
+                try {
+                    const response = await fetch('/api/family-gallery/upload', { method: 'POST', body: formData });
+                    const data = await response.json().catch(() => ({}));
+                    if (!response.ok || data.status !== 'success') {
+                        showToast(data.message || 'Не удалось загрузить фото.', 'error');
+                        return;
+                    }
+
+                    uploadInput.value = '';
+                    uploadLimit = Number(data.upload_limit || uploadLimit || 0);
+                    limitLabel.textContent = String(uploadLimit);
+                    summary.classList.add('active');
+                    summary.textContent = `Загружено ${data.images.length} из ${uploadLimit}.`;
+                    renderImages(data.images);
+                    await loadGlobalCollage();
+                    showToast('Фото загружено.', 'success');
+                } catch (error) {
+                    showToast('Ошибка сети. Попробуйте позже.', 'error');
+                } finally {
+                    uploadBtn.disabled = false;
+                    uploadBtn.textContent = 'Загрузить фото';
+                }
+            }
+
+            async function deleteImage(imageId) {
+                const payload = getHeadPayload();
+                if (!payload.head_first_name || !payload.head_second_name) {
+                    showToast('Введите имя и фамилию главы семьи.', 'error');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/family-gallery/image/${imageId}`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                    });
+                    const data = await response.json().catch(() => ({}));
+                    if (!response.ok || data.status !== 'success') {
+                        showToast(data.message || 'Не удалось удалить фото.', 'error');
+                        return;
+                    }
+
+                    renderImages(data.images);
+                    summary.classList.add('active');
+                    summary.textContent = `Загружено ${data.images.length} из ${uploadLimit}.`;
+                    await loadGlobalCollage();
+                    showToast('Фото удалено.', 'success');
+                } catch (error) {
+                    showToast('Ошибка сети. Попробуйте позже.', 'error');
+                }
+            }
+
+            loadBtn.addEventListener('click', async () => {
+                await loadFamilyGallery();
+            });
+
+            uploadBtn.addEventListener('click', async () => {
+                await uploadImage();
+            });
+
+            grid.addEventListener('click', async (e) => {
+                const btn = e.target.closest('.delete-image-btn');
+                if (!btn) return;
+                const imageId = Number(btn.dataset.id || 0);
+                if (!imageId) return;
+                await deleteImage(imageId);
+            });
+
+            document.addEventListener('click', (e) => {
+                const downloadBtn = e.target.closest('.photo-download-btn');
+                if (downloadBtn) {
+                    e.stopPropagation();
+                    return;
+                }
+
+                const image = e.target.closest('.open-photo-image');
+                if (!image) return;
+
+                const url = image.dataset.photoUrl || image.getAttribute('src') || '';
+                const name = image.dataset.photoName || 'photo.jpg';
+                const author = image.dataset.photoAuthor || 'Гость';
+                if (!url) return;
+                openLightbox(url, name, author);
+            });
+
+            lightboxClose.addEventListener('click', closeLightbox);
+            lightbox.addEventListener('click', (e) => {
+                if (!lightboxContent.contains(e.target)) {
+                    closeLightbox();
+                }
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && !lightbox.hidden) {
+                    closeLightbox();
+                }
+            });
+
+            downloadGalleryBtn?.addEventListener('click', (e) => {
+                if (globalCollageGrid.querySelector('.family-members-empty')) {
+                    e.preventDefault();
+                    showToast('Пока нет фото для скачивания.', 'error');
+                }
+            });
+
+            loadGlobalCollage();
+        })();
+    </script>
+</body>
+</html>

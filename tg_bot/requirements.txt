@@ -1,4 +1,0 @@
-aiogram
-pydantic
-pydantic_settings
-httpx

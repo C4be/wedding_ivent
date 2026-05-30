@@ -49,6 +49,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const navToggle = document.getElementById('navToggle');
     const navMenu = document.getElementById('navMenu');
 
+    const safeGalleryEnabled = typeof CONFIG.galleryEnabled === 'boolean' ? CONFIG.galleryEnabled : true;
+    if (!safeGalleryEnabled) {
+        document.querySelectorAll('[data-gallery-nav="1"]').forEach(el => el.remove());
+    }
+
     // Scroll effect
     window.addEventListener('scroll', () => {
         if (window.scrollY > 100) {
@@ -359,338 +364,437 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // ============ RSVP Form (new) ============
+    function setPreferencesHeadNames(firstName, secondName) {
+        const prefFirstInput = document.getElementById('prefHeadFirstName');
+        const prefSecondInput = document.getElementById('prefHeadSecondName');
+        if (!prefFirstInput || !prefSecondInput) return;
+        prefFirstInput.value = firstName || '';
+        prefSecondInput.value = secondName || '';
+    }
+
+    // ============ Family Registration Form ============
     (function () {
-        const form = document.getElementById('rsvpForm');
+        const form = document.getElementById('familyRegistrationForm');
         if (!form) return;
 
-        const attendingRadios  = () => Array.from(form.querySelectorAll('input[name="attending"]'));
-        const withOthersRadios = () => Array.from(form.querySelectorAll('input[name="with_others"]'));
-        const rsvpWithGroup    = document.getElementById('rsvpWithGroup');
-        const familySection    = document.getElementById('rsvpFamilySection');
-        const familyList       = document.getElementById('familyMembersList');
-        const addBtn           = document.getElementById('addFamilyMember');
+        const headFirstInput = document.getElementById('headFirstName');
+        const headSecondInput = document.getElementById('headSecondName');
+        const memberFirstInput = document.getElementById('memberFirstName');
+        const memberSecondInput = document.getElementById('memberSecondName');
+        const memberRoleInput = document.getElementById('memberRole');
+        const memberPhoneInput = document.getElementById('memberPhone');
+        const memberAttendingInput = document.getElementById('memberAttending');
+        const registerBtn = document.getElementById('registerFamilyBtn');
+        const deleteFamilyBtn = document.getElementById('deleteFamilyBtn');
+        const addMemberBtn = document.getElementById('addFamilyMemberBtn');
+        const membersList = document.getElementById('familyMembersList');
+        const familyKeyHint = document.getElementById('familyKeyHint');
 
-        let memberCounter = 0;
+        let activeFamily = null;
 
-        // ---- visibility helpers ----
-        function getVal(radios) {
-            const c = radios().find(r => r.checked);
-            return c ? c.value : null;
+        function normalizeName(value) {
+            return String(value || '').trim().replace(/\s+/g, ' ');
         }
 
-        function refreshVisibility() {
-            const attending  = getVal(attendingRadios);
-            const withOthers = getVal(withOthersRadios);
+        function normalizeNameKey(value) {
+            return normalizeName(value).toLowerCase();
+        }
 
-            // Show "alone / family" only when attending
-            rsvpWithGroup.style.display = attending === 'yes' ? '' : 'none';
-            if (attending !== 'yes') {
-                // reset with_others selection
-                withOthersRadios().forEach(r => r.checked = false);
+        function buildHeadKey(firstName, secondName) {
+            return `${normalizeNameKey(firstName)}::${normalizeNameKey(secondName)}`;
+        }
+
+        function getHeadData() {
+            return {
+                head_first_name: normalizeName(headFirstInput.value),
+                head_second_name: normalizeName(headSecondInput.value)
+            };
+        }
+
+        function isActiveHeadSelected() {
+            if (!activeFamily) return false;
+            const head = getHeadData();
+            return buildHeadKey(head.head_first_name, head.head_second_name) === activeFamily.family_key;
+        }
+
+        function updateFamilyHint(text, success = false) {
+            familyKeyHint.textContent = text;
+            familyKeyHint.classList.toggle('active', success);
+        }
+
+        function roleLabel(role) {
+            const map = {
+                head: 'Глава семьи',
+                partner: 'Партнёр',
+                child: 'Ребёнок',
+                guest: 'Гость',
+                member: 'Участник'
+            };
+            return map[role] || role;
+        }
+
+        function renderMembers(family) {
+            const members = family?.members || [];
+            if (members.length === 0) {
+                membersList.innerHTML = '<p class="family-members-empty">Список пока пуст.</p>';
+                return;
             }
 
-            // Show family section
-            const showFamily = attending === 'yes' && withOthers === 'family';
-            familySection.style.display = showFamily ? '' : 'none';
-            if (!showFamily) familyList.innerHTML = '';
+            membersList.innerHTML = members.map((member) => {
+                const canDelete = member.role !== 'head';
+                const phone = member.phone ? `<span>Телефон: ${member.phone}</span>` : '';
+                const attendingText = member.attending ? '✅ Придёт' : '❌ Не придёт';
+
+                return `
+                    <div class="family-member-item">
+                        <div class="family-member-main">
+                            <strong>${member.first_name} ${member.second_name}</strong>
+                            <span>${roleLabel(member.role)}</span>
+                            <span>${attendingText}</span>
+                            ${phone}
+                        </div>
+                        ${canDelete ? `
+                            <div class="form-actions family-member-actions" style="margin-top: 0; gap: 8px;">
+                                <button
+                                    type="button"
+                                    class="btn btn-outline btn-sm family-member-icon-btn family-member-edit"
+                                    data-first-name="${member.first_name}"
+                                    data-second-name="${member.second_name}"
+                                    data-role="${member.role || 'member'}"
+                                    data-phone="${member.phone || ''}"
+                                    data-attending="${member.attending ? 'yes' : 'no'}"
+                                >✏️</button>
+                                <button type="button" class="btn btn-outline btn-sm family-member-icon-btn family-member-delete" data-first-name="${member.first_name}" data-second-name="${member.second_name}">🗑️</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            setPreferencesHeadNames(family.head_first_name, family.head_second_name);
         }
 
-        attendingRadios().forEach(r  => r.addEventListener('change', refreshVisibility));
-        // delegate for dynamically added radios
-        form.addEventListener('change', function (e) {
-            if (e.target.name === 'with_others') refreshVisibility();
-        });
+        async function registerFamily() {
+            const head = getHeadData();
+            if (!head.head_first_name || !head.head_second_name) {
+                showToast('Введите имя и фамилию главы семьи.', 'error');
+                return null;
+            }
 
-        // ---- family member card ----
-        function createMemberCard() {
-            memberCounter++;
-            const idx = memberCounter;
+            registerBtn.disabled = true;
+            registerBtn.textContent = 'Сохраняем...';
 
-            const card = document.createElement('div');
-            card.className = 'family-member-card';
-            card.dataset.member = idx;
-
-            card.innerHTML = `
-                <div class="family-member-card-header">
-                    <span class="family-member-card-title">Сопровождающий ${idx}</span>
-                    <button type="button" class="family-member-remove" aria-label="Удалить">✕</button>
-                </div>
-
-                <div class="form-group">
-                    <label>Роль *</label>
-                    <div class="role-selector">
-                        <button type="button" class="role-btn" data-role="partner">💑 Вторая половинка</button>
-                        <button type="button" class="role-btn" data-role="child">👶 Ребёнок</button>
-                    </div>
-                </div>
-
-                <div class="member-fields" data-fields-for="${idx}" style="display:none"></div>
-            `;
-
-            // Role buttons
-            card.querySelectorAll('.role-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    card.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    card.dataset.role = btn.dataset.role;
-                    renderMemberFields(card, btn.dataset.role);
+            try {
+                const response = await fetch('/api/families/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(head)
                 });
-            });
 
-            // Remove button
-            card.querySelector('.family-member-remove').addEventListener('click', () => {
-                card.remove();
-                renumberCards();
-            });
-
-            return card;
-        }
-
-        function renderMemberFields(card, role) {
-            const container = card.querySelector('.member-fields');
-            container.style.display = '';
-
-            if (role === 'child') {
-                container.innerHTML = `
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Имя *</label>
-                            <input type="text" name="member_first_name" required placeholder="Имя ребёнка">
-                        </div>
-                        <div class="form-group">
-                            <label>Фамилия *</label>
-                            <input type="text" name="member_last_name" required placeholder="Фамилия ребёнка">
-                        </div>
-                    </div>
-                `;
-            } else {
-                // partner
-                container.innerHTML = `
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Имя *</label>
-                            <input type="text" name="member_first_name" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Фамилия *</label>
-                            <input type="text" name="member_last_name" required>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Телефон *</label>
-                            <input type="text" name="member_phone" required placeholder="+7 (999) 123-45-67">
-                        </div>
-                        <div class="form-group">
-                            <label>Telegram *</label>
-                            <input type="text" name="member_telegram" required placeholder="@username">
-                        </div>
-                    </div>
-                `;
-            }
-        }
-
-        function renumberCards() {
-            familyList.querySelectorAll('.family-member-card').forEach((card, i) => {
-                card.querySelector('.family-member-card-title').textContent = `Сопровождающий ${i + 1}`;
-            });
-        }
-
-        addBtn.addEventListener('click', () => {
-            familyList.appendChild(createMemberCard());
-        });
-
-        // ---- collect & submit ----
-        function collectMembers() {
-            const members = [];
-            familyList.querySelectorAll('.family-member-card').forEach(card => {
-                const role = card.dataset.role;
-                if (!role) return; // no role selected yet — skip (validation will catch it)
-
-                const fn = card.querySelector('[name="member_first_name"]')?.value.trim() || '';
-                const ln = card.querySelector('[name="member_last_name"]')?.value.trim() || '';
-                const ph = card.querySelector('[name="member_phone"]')?.value.trim()      || '';
-                const tg = card.querySelector('[name="member_telegram"]')?.value.trim()   || '';
-
-                members.push({ fn, ln, ph, tg, role });
-            });
-            return members;
-        }
-
-        function validateForm() {
-            const fn = form.querySelector('#firstName').value.trim();
-            const ln = form.querySelector('#lastName').value.trim();
-            const ph = form.querySelector('#phone').value.trim();
-            const tg = form.querySelector('#telegram').value.trim();
-            const attending = getVal(attendingRadios);
-
-            if (!fn || !ln) { showToast('Введите имя и фамилию.', 'error'); return false; }
-            if (!ph)          { showToast('Введите номер телефона.', 'error'); return false; }
-            if (!tg)          { showToast('Введите Telegram-ник.', 'error'); return false; }
-            if (!attending)   { showToast('Укажите, придёте ли вы.', 'error'); return false; }
-
-            if (attending === 'yes') {
-                const wo = getVal(withOthersRadios);
-                if (!wo) { showToast('Укажите, придёте один или с кем-то.', 'error'); return false; }
-
-                if (wo === 'family') {
-                    const cards = familyList.querySelectorAll('.family-member-card');
-                    if (cards.length === 0) {
-                        showToast('Добавьте хотя бы одного сопровождающего.', 'error');
-                        return false;
-                    }
-                    for (const card of cards) {
-                        const role = card.dataset.role;
-                        if (!role) { showToast('Выберите роль для каждого сопровождающего.', 'error'); return false; }
-                        const mfn = card.querySelector('[name="member_first_name"]')?.value.trim();
-                        const mln = card.querySelector('[name="member_last_name"]')?.value.trim();
-                        if (!mfn || !mln) { showToast('Введите имя и фамилию для каждого сопровождающего.', 'error'); return false; }
-                        if (role === 'partner') {
-                            const mph = card.querySelector('[name="member_phone"]')?.value.trim();
-                            const mtg = card.querySelector('[name="member_telegram"]')?.value.trim();
-                            if (!mph || !mtg) { showToast('Введите телефон и Telegram для второй половинки.', 'error'); return false; }
-                        }
-                    }
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok || result.status !== 'success') {
+                    showToast(result.message || 'Не удалось создать семейную группу.', 'error');
+                    return null;
                 }
+
+                activeFamily = result.family;
+                renderMembers(activeFamily);
+                setPreferencesHeadNames(activeFamily.head_first_name, activeFamily.head_second_name);
+                updateFamilyHint(`Семейная группа активна: ${activeFamily.head_first_name} ${activeFamily.head_second_name}`, true);
+                showToast('Семейная группа готова. Можно добавлять участников.', 'success');
+                return activeFamily;
+            } catch (error) {
+                showToast('Ошибка сети. Попробуйте позже.', 'error');
+                return null;
+            } finally {
+                registerBtn.disabled = false;
+                registerBtn.textContent = 'Найти/создать семейную группу';
             }
-            return true;
+        }
+
+        async function addOrUpdateMember() {
+            if (!isActiveHeadSelected()) {
+                showToast('Сначала нажмите "Найти/создать семейную группу".', 'error');
+                return;
+            }
+
+            const memberFirst = normalizeName(memberFirstInput.value);
+            const memberSecond = normalizeName(memberSecondInput.value);
+
+            if (!memberFirst || !memberSecond) {
+                showToast('Введите имя и фамилию участника.', 'error');
+                return;
+            }
+
+            const payload = {
+                ...getHeadData(),
+                member_first_name: memberFirst,
+                member_second_name: memberSecond,
+                role: memberRoleInput.value || 'member',
+                phone: normalizeName(memberPhoneInput.value),
+                attending: memberAttendingInput.value === 'yes'
+            };
+
+            addMemberBtn.disabled = true;
+            addMemberBtn.textContent = 'Сохраняем...';
+
+            try {
+                const response = await fetch('/api/families/member', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok || result.status !== 'success') {
+                    showToast(result.message || 'Не удалось сохранить участника.', 'error');
+                    return;
+                }
+
+                activeFamily = result.family;
+                renderMembers(activeFamily);
+                memberFirstInput.value = '';
+                memberSecondInput.value = '';
+                memberPhoneInput.value = '';
+                memberRoleInput.value = 'member';
+                memberAttendingInput.value = 'yes';
+                showToast('Участник сохранён.', 'success');
+            } catch (error) {
+                showToast('Ошибка сети. Попробуйте позже.', 'error');
+            } finally {
+                addMemberBtn.disabled = false;
+                addMemberBtn.textContent = 'Добавить / обновить участника';
+            }
+        }
+
+        async function removeMember(memberFirstName, memberSecondName) {
+            if (!isActiveHeadSelected()) {
+                showToast('Сначала активируйте семью повторно.', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/families/member', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ...getHeadData(),
+                        member_first_name: memberFirstName,
+                        member_second_name: memberSecondName
+                    })
+                });
+
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok || result.status !== 'success') {
+                    showToast(result.message || 'Не удалось удалить участника.', 'error');
+                    return;
+                }
+
+                activeFamily = result.family;
+                renderMembers(activeFamily);
+                showToast('Участник удалён.', 'success');
+            } catch (error) {
+                showToast('Ошибка сети. Попробуйте позже.', 'error');
+            }
+        }
+
+        async function deleteFamilyGroup() {
+            const head = getHeadData();
+            if (!head.head_first_name || !head.head_second_name) {
+                showToast('Введите имя и фамилию главы семьи.', 'error');
+                return;
+            }
+
+            const confirmDelete = window.confirm(
+                `Удалить семейную группу ${head.head_first_name} ${head.head_second_name} и все связанные данные?`
+            );
+            if (!confirmDelete) return;
+
+            deleteFamilyBtn.disabled = true;
+            const oldText = deleteFamilyBtn.textContent;
+            deleteFamilyBtn.textContent = 'Удаляем...';
+
+            try {
+                const response = await fetch('/api/families/register', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(head)
+                });
+
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok || result.status !== 'success') {
+                    showToast(result.message || 'Не удалось удалить семейную группу.', 'error');
+                    return;
+                }
+
+                activeFamily = null;
+                memberFirstInput.value = '';
+                memberSecondInput.value = '';
+                memberPhoneInput.value = '';
+                memberRoleInput.value = 'member';
+                memberAttendingInput.value = 'yes';
+                membersList.innerHTML = '<p class="family-members-empty">Список пока пуст.</p>';
+                updateFamilyHint('Семейная группа удалена. Можно создать новую.', false);
+                showToast('Семейная группа удалена.', 'success');
+            } catch (error) {
+                showToast('Ошибка сети. Попробуйте позже.', 'error');
+            } finally {
+                deleteFamilyBtn.disabled = false;
+                deleteFamilyBtn.textContent = oldText;
+            }
         }
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            if (!validateForm()) return;
+            await registerFamily();
+        });
 
-            const attending   = getVal(attendingRadios);
-            const isAttending = attending === 'yes';
-            const withOthers  = getVal(withOthersRadios);
+        addMemberBtn.addEventListener('click', async () => {
+            await addOrUpdateMember();
+        });
 
-            const mainPerson = {
-                first_name:       form.querySelector('#firstName').value.trim(),
-                second_name:      form.querySelector('#lastName').value.trim(),
-                phone_number:     form.querySelector('#phone').value.trim(),
-                tg_username:      form.querySelector('#telegram').value.trim(),
-                telegram_id:      null,
-                chat_id:          null,
-                role:             'FAMALY_HEAD',
-                main_account:     null,
-                is_main_account:  true,
-                is_going_on_event: isAttending
+        if (deleteFamilyBtn) {
+            deleteFamilyBtn.addEventListener('click', async () => {
+                await deleteFamilyGroup();
+            });
+        }
+
+        membersList.addEventListener('click', async (e) => {
+            const editBtn = e.target.closest('.family-member-edit');
+            if (editBtn) {
+                memberFirstInput.value = editBtn.dataset.firstName || '';
+                memberSecondInput.value = editBtn.dataset.secondName || '';
+                memberRoleInput.value = editBtn.dataset.role || 'member';
+                memberPhoneInput.value = editBtn.dataset.phone || '';
+                memberAttendingInput.value = editBtn.dataset.attending || 'yes';
+                showToast('Данные участника подставлены в форму.', 'success');
+                addMemberBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+
+            const btn = e.target.closest('.family-member-delete');
+            if (!btn) return;
+            const memberFirstName = btn.dataset.firstName || '';
+            const memberSecondName = btn.dataset.secondName || '';
+            if (!memberFirstName || !memberSecondName) return;
+            await removeMember(memberFirstName, memberSecondName);
+        });
+
+        [headFirstInput, headSecondInput].forEach((input) => {
+            input.addEventListener('input', () => {
+                if (!activeFamily) return;
+                if (!isActiveHeadSelected()) {
+                    updateFamilyHint('Вы изменили данные главы семьи. Нажмите "Найти/создать семейную группу" снова.', false);
+                }
+            });
+        });
+
+    })();
+
+    // ============ Family Preferences Form ============
+    (function () {
+        const form = document.getElementById('preferencesForm');
+        if (!form) return;
+
+        const headFirstInput = document.getElementById('prefHeadFirstName');
+        const headSecondInput = document.getElementById('prefHeadSecondName');
+        const drinksInput = document.getElementById('prefDrinks');
+        const musicInput = document.getElementById('prefMusic');
+        const foodInput = document.getElementById('prefFood');
+        const notesInput = document.getElementById('prefNotes');
+        const loadBtn = document.getElementById('loadPreferencesBtn');
+        const saveBtn = document.getElementById('savePreferencesBtn');
+
+        function getHeadData() {
+            return {
+                head_first_name: String(headFirstInput.value || '').trim(),
+                head_second_name: String(headSecondInput.value || '').trim()
             };
+        }
 
-            const submitBtn = document.getElementById('rsvpSubmitBtn');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Отправляем...';
+        function fillPreferences(preferences) {
+            drinksInput.value = preferences?.drinks || '';
+            musicInput.value = preferences?.music || '';
+            foodInput.value = preferences?.food || '';
+            notesInput.value = preferences?.notes || '';
+        }
+
+        async function loadPreferences() {
+            const head = getHeadData();
+            if (!head.head_first_name || !head.head_second_name) {
+                showToast('Введите имя и фамилию главы семьи.', 'error');
+                return;
+            }
+
+            loadBtn.disabled = true;
+            loadBtn.textContent = 'Загрузка...';
 
             try {
-                let resp;
+                const params = new URLSearchParams(head);
+                const response = await fetch(`/api/preferences?${params.toString()}`);
+                const result = await response.json().catch(() => ({}));
 
-                if (!isAttending || withOthers === 'alone' || !withOthers) {
-                    // Single member
-                    resp = await fetch('/api/members', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(mainPerson)
-                    });
-                } else {
-                    // Family
-                    const rawMembers = collectMembers();
-                    const family = [mainPerson];
-                    
-                    
-                    rawMembers.forEach((m, i) => {
-                        const phone = m.ph ? m.ph.trim() : '';
-                        if (!phone) {
-                            family.push({
-                                first_name:       m.fn,
-                                second_name:      m.ln,
-                                tg_username:      m.tg ? m.tg.trim() : null,
-                                telegram_id:      null,
-                                chat_id:          null,
-                                role:             m.role === 'child' ? 'CHILD' : 'FAMALY_TAIL',
-                                main_account:     null,
-                                is_main_account:  false,
-                                is_going_on_event: true
-                            });
-                        } else {
-                            family.push({
-                                first_name:       m.fn,
-                                second_name:      m.ln,
-                                phone_number:     m.ph ? m.ph.trim() : null ,
-                                tg_username:      m.tg ? m.tg.trim() : null,
-                                telegram_id:      null,
-                                chat_id:          null,
-                                role:             m.role === 'child' ? 'CHILD' : 'FAMALY_TAIL',
-                                main_account:     null,
-                                is_main_account:  false,
-                                is_going_on_event: true
-                            });
-                        }
-                    });
-
-                    
-
-                    resp = await fetch('/api/members/family', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(family)
-                    });
+                if (!response.ok || result.status !== 'success') {
+                    showToast(result.message || 'Не удалось загрузить предпочтения.', 'error');
+                    return;
                 }
 
-                const json = await resp.json().catch(() => ({}));
-
-                if (resp.ok) {
-                    showToast(json.message || 'Анкета отправлена! 🎉', 'success');
-                    form.reset();
-                    familyList.innerHTML = '';
-                    refreshVisibility();
-                } else {
-                    showToast(json.message || json.detail || 'Ошибка при отправке.', 'error');
-                }
-            } catch (err) {
-                console.error(err);
+                fillPreferences(result.preferences);
+                showToast('Текущие предпочтения загружены.', 'success');
+            } catch (error) {
                 showToast('Ошибка сети. Попробуйте позже.', 'error');
             } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Отправить';
+                loadBtn.disabled = false;
+                loadBtn.textContent = 'Загрузить текущие данные';
+            }
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const head = getHeadData();
+
+            if (!head.head_first_name || !head.head_second_name) {
+                showToast('Введите имя и фамилию главы семьи.', 'error');
+                return;
+            }
+
+            const payload = {
+                ...head,
+                drinks: String(drinksInput.value || '').trim(),
+                music: String(musicInput.value || '').trim(),
+                food: String(foodInput.value || '').trim(),
+                notes: String(notesInput.value || '').trim()
+            };
+
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Сохраняем...';
+
+            try {
+                const response = await fetch('/api/preferences', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json().catch(() => ({}));
+
+                if (!response.ok || result.status !== 'success') {
+                    showToast(result.message || 'Не удалось сохранить предпочтения.', 'error');
+                    return;
+                }
+
+                showToast('Предпочтения сохранены.', 'success');
+            } catch (error) {
+                showToast('Ошибка сети. Попробуйте позже.', 'error');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Сохранить предпочтения';
             }
         });
 
-        refreshVisibility();
+        loadBtn.addEventListener('click', async () => {
+            await loadPreferences();
+        });
     })();
-
-    // ============ Question Form ============
-    const questionForm = document.getElementById('questionForm');
-
-    questionForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const formData = new FormData(questionForm);
-        const data = {
-            name: formData.get('name') || 'Аноним',
-            contact: formData.get('contact') || '',
-            question: formData.get('question')
-        };
-
-        try {
-            const response = await fetch('/api/question', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-
-            const result = await response.json();
-            
-            if (result.status === 'success') {
-                showToast('Вопрос отправлен! Мы скоро ответим.', 'success');
-                questionForm.reset();
-            } else {
-                showToast('Ошибка при отправке.', 'error');
-            }
-        } catch (error) {
-            showToast('Ошибка сети.', 'error');
-        }
-    });
 
     // ============ Toast Notification ============
     function showToast(message, type = 'success') {
@@ -723,6 +827,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ============ Load Gallery (if exists) ============
     async function loadGallery() {
+        if (!safeGalleryEnabled) {
+            return;
+        }
         try {
             const response = await fetch('/api/gallery');
             const images = await response.json();
@@ -747,6 +854,63 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Gallery not loaded');
         }
     }
+
+    // ============ Family Invitation Download ============
+    (function () {
+        const btn = document.getElementById('downloadInvitationBtn');
+        const firstInput = document.getElementById('invitationHeadFirstName');
+        const secondInput = document.getElementById('invitationHeadSecondName');
+        if (!btn || !firstInput || !secondInput) return;
+
+        btn.addEventListener('click', async () => {
+            const first = String(firstInput.value || '').trim();
+            const second = String(secondInput.value || '').trim();
+            if (!first || !second) {
+                showToast('Введите имя и фамилию главы семьи.', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            const originalText = btn.textContent;
+            btn.textContent = 'Готовим PDF...';
+
+            try {
+                const params = new URLSearchParams({
+                    head_first_name: first,
+                    head_second_name: second,
+                });
+
+                const response = await fetch(`/api/invitation/download?${params.toString()}`);
+                if (!response.ok) {
+                    let message = 'Не удалось сформировать приглашение.';
+                    try {
+                        const err = await response.json();
+                        if (err?.message) message = err.message;
+                    } catch (e) {
+                        // ignore
+                    }
+                    showToast(message, 'error');
+                    return;
+                }
+
+                const blob = await response.blob();
+                const objectUrl = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = objectUrl;
+                link.download = `invitation_${second}_${first}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                URL.revokeObjectURL(objectUrl);
+                showToast('Приглашение готово и скачано.', 'success');
+            } catch (error) {
+                showToast('Ошибка сети. Попробуйте позже.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        });
+    })();
 
     loadGallery();
 });

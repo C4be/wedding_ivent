@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель | {{ config.meta.title }}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;600&family=Playfair+Display:wght@400;600&family=Lora:wght@400;500;600&family=Manrope:wght@300;400;500;600&family=Nunito+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        :root {
+            --color-primary: {{ theme_payload.primary_color }};
+            --color-secondary: {{ theme_payload.secondary_color }};
+            --color-accent: {{ theme_payload.accent_color }};
+            --color-bg: {{ theme_payload.light_bg }};
+            --font-display: '{{ theme_payload.display_font }}', {{ theme_payload.display_font_fallback }};
+            --font-body: '{{ theme_payload.body_font }}', {{ theme_payload.body_font_fallback }};
+        }
+
+        [data-theme="dark"] {
+            --color-bg: {{ theme_payload.dark_bg }};
+        }
+
+        .admin-shell {
+            min-height: 100vh;
+            background: linear-gradient(180deg, var(--color-bg) 0%, var(--color-accent) 100%);
+            padding: 24px 0 48px;
+        }
+
+        .admin-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .admin-card {
+            background: var(--color-bg-alt);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            padding: 22px;
+            margin-bottom: 14px;
+        }
+
+        .admin-card h2 {
+            font-family: var(--font-display);
+            font-size: 1.7rem;
+            margin-bottom: 10px;
+        }
+
+        .admin-card h3 {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            margin: 0 0 8px;
+        }
+
+        .admin-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .admin-row-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .admin-stat {
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            padding: 10px;
+            background: var(--color-bg);
+        }
+
+        .admin-stat strong {
+            display: block;
+            font-size: 1.25rem;
+            line-height: 1.1;
+        }
+
+        .admin-stat span {
+            color: var(--color-text-muted);
+            font-size: 0.8rem;
+        }
+
+        .event-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .event-item {
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            background: var(--color-bg);
+            padding: 10px;
+        }
+
+        .event-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .event-item-title {
+            font-weight: 600;
+        }
+
+        .admin-families {
+            display: grid;
+            gap: 10px;
+        }
+
+        .admin-family-item {
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            padding: 10px;
+            background: var(--color-bg);
+        }
+
+        .admin-family-item h4 {
+            margin-bottom: 6px;
+        }
+
+        .admin-family-item ul {
+            margin: 0;
+            padding-left: 18px;
+            color: var(--color-text-muted);
+        }
+
+        .admin-images-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .admin-image-card {
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            background: var(--color-bg);
+        }
+
+        .admin-image-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .admin-image-card footer {
+            padding: 8px;
+            display: grid;
+            gap: 6px;
+            font-size: 0.78rem;
+            color: var(--color-text-muted);
+        }
+
+        .admin-config {
+            width: 100%;
+            min-height: 300px;
+            resize: vertical;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            border: 2px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            background: var(--color-bg);
+            color: var(--color-text);
+            padding: 12px;
+        }
+
+        .admin-config:focus {
+            outline: none;
+            border-color: var(--color-primary);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .form-actions .btn {
+            min-width: 190px;
+        }
+
+        .timeline-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        @media (max-width: 1100px) {
+            .admin-stats {
+                grid-template-columns: repeat(3, minmax(120px, 1fr));
+            }
+
+            .admin-row-3 {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .admin-row,
+            .admin-row-3,
+            .timeline-columns {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .admin-head {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .admin-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .form-actions .btn {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-shell">
+        <div class="container">
+            <div class="admin-head">
+                <h1 class="section-title" style="margin: 0; text-align: left;">Админ-панель</h1>
+                <div class="form-actions" style="margin-top:0;">
+                    <a href="/" class="btn btn-outline">На сайт</a>
+                    <a href="/gallery" class="btn btn-outline">Семейная галерея</a>
+                    <a href="/photographer" class="btn btn-outline">Фото фотографа</a>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <h2>Доступ</h2>
+                <p class="section-subtitle" style="text-align:left; margin-top:0;">Введите пароль администратора для управления сайтом.</p>
+                <div class="admin-row">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label for="adminPassword">Пароль администратора</label>
+                        <input type="password" id="adminPassword" placeholder="Введите ADMIN_PASSWORD">
+                    </div>
+                    <div class="form-actions" style="margin:0; align-items:end;">
+                        <button type="button" class="btn btn-primary" id="adminLoadAllBtn">Загрузить данные</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <h2>Статистика</h2>
+                <div class="admin-stats" id="adminStats">
+                    <div class="admin-stat"><strong>0</strong><span>Семей</span></div>
+                    <div class="admin-stat"><strong>0</strong><span>Участников</span></div>
+                    <div class="admin-stat"><strong>0</strong><span>Придут</span></div>
+                    <div class="admin-stat"><strong>0</strong><span>Анкет предпочтений</span></div>
+                    <div class="admin-stat"><strong>0</strong><span>Фото семей</span></div>
+                    <div class="admin-stat"><strong>0</strong><span>Фото фотографа</span></div>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <h2>Контент сайта (без JSON)</h2>
+                <div class="admin-row-3">
+                    <div class="form-group"><label for="contentMetaTitle">Заголовок страницы</label><input id="contentMetaTitle" type="text"></div>
+                    <div class="form-group"><label for="contentMetaDescription">Описание страницы</label><input id="contentMetaDescription" type="text"></div>
+                    <div class="form-group"><label for="contentHashtag">Хэштег</label><input id="contentHashtag" type="text"></div>
+                    <div class="form-group"><label for="contentGroom">Жених</label><input id="contentGroom" type="text"></div>
+                    <div class="form-group"><label for="contentBride">Невеста</label><input id="contentBride" type="text"></div>
+                    <div class="form-group"><label for="contentEventDate">Дата (YYYY-MM-DD)</label><input id="contentEventDate" type="text"></div>
+                    <div class="form-group"><label for="contentEventDateDisplay">Дата для отображения</label><input id="contentEventDateDisplay" type="text"></div>
+                    <div class="form-group"><label for="contentStoryTitle">Заголовок истории</label><input id="contentStoryTitle" type="text"></div>
+                    <div class="form-group"><label for="contentStoryText">Текст истории</label><textarea id="contentStoryText" rows="3"></textarea></div>
+                    <div class="form-group"><label for="contentLocationName">Название места</label><input id="contentLocationName" type="text"></div>
+                    <div class="form-group"><label for="contentLocationAddress">Адрес места</label><input id="contentLocationAddress" type="text"></div>
+                    <div class="form-group"><label for="contentDresscodeTitle">Заголовок дресс-кода</label><input id="contentDresscodeTitle" type="text"></div>
+                    <div class="form-group"><label for="contentDresscodeText">Текст дресс-кода</label><textarea id="contentDresscodeText" rows="3"></textarea></div>
+                    <div class="form-group"><label for="contentOrganizerName">Организатор</label><input id="contentOrganizerName" type="text"></div>
+                    <div class="form-group"><label for="contentOrganizerPhone">Телефон организатора</label><input id="contentOrganizerPhone" type="text"></div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" id="loadContentBtn">Загрузить контент</button>
+                    <button type="button" class="btn btn-primary" id="saveContentBtn">Сохранить контент</button>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <h2>Программа дня (интерактивно)</h2>
+                <div class="timeline-columns">
+                    <div>
+                        <div class="form-group"><label for="day1Title">Заголовок дня 1</label><input id="day1Title" type="text"></div>
+                        <div id="day1Events" class="event-list"></div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-outline" id="addDay1EventBtn">Добавить событие дня 1</button>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="form-group"><label for="day2Title">Заголовок дня 2</label><input id="day2Title" type="text"></div>
+                        <div id="day2Events" class="event-list"></div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-outline" id="addDay2EventBtn">Добавить событие дня 2</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group"><label for="ceremonyNote">Примечание под программой</label><textarea id="ceremonyNote" rows="3"></textarea></div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" id="loadTimelineBtn">Загрузить программу</button>
+                    <button type="button" class="btn btn-primary" id="saveTimelineBtn">Сохранить программу</button>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <h2>Стилистика сайта (без JSON)</h2>
+                <div class="admin-row-3">
+                    <div class="form-group"><label for="themePrimary">Primary color</label><input id="themePrimary" type="text" placeholder="#D4A574"></div>
+                    <div class="form-group"><label for="themeSecondary">Secondary color</label><input id="themeSecondary" type="text" placeholder="#2C3E50"></div>
+                    <div class="form-group"><label for="themeAccent">Accent color</label><input id="themeAccent" type="text" placeholder="#E8D5C4"></div>
+                    <div class="form-group"><label for="themeLightBg">Light bg</label><input id="themeLightBg" type="text" placeholder="#FAF8F5"></div>
+                    <div class="form-group"><label for="themeDarkBg">Dark bg</label><input id="themeDarkBg" type="text" placeholder="#1a1a2e"></div>
+                    <div class="form-group"><label for="themeDisplayFont">Display font</label><select id="themeDisplayFont"></select></div>
+                    <div class="form-group"><label for="themeBodyFont">Body font</label><select id="themeBodyFont"></select></div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" id="loadThemeBtn">Загрузить стили</button>
+                    <button type="button" class="btn btn-primary" id="saveThemeBtn">Сохранить стили</button>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <h2>Функции сайта</h2>
+                <div class="admin-row">
+                    <div class="form-group">
+                        <label for="galleryEnabled">Семейная галерея включена</label>
+                        <select id="galleryEnabled">
+                            <option value="true">Да</option>
+                            <option value="false">Нет</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="galleryLimit">Лимит фото на семью</label>
+                        <input type="number" id="galleryLimit" min="1" max="100" step="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="secretVideoEnabled">Показывать пункт "Секретное видео"</label>
+                        <select id="secretVideoEnabled">
+                            <option value="true">Да</option>
+                            <option value="false">Нет</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" id="loadFeaturesBtn">Загрузить настройки</button>
+                    <button type="button" class="btn btn-primary" id="saveFeaturesBtn">Сохранить настройки</button>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <h2>Секретное видео</h2>
+                <div class="form-actions">
+                    <input type="file" id="secretVideoInput" accept="video/mp4,video/webm,video/quicktime,video/x-msvideo,video/x-m4v">
+                    <button type="button" class="btn btn-primary" id="uploadSecretVideoBtn">Загрузить видео</button>
+                    <button type="button" class="btn btn-outline" id="deleteSecretVideoBtn">Удалить видео</button>
+                    <button type="button" class="btn btn-outline" id="reloadSecretVideoBtn">Обновить статус</button>
+                </div>
+                <div id="secretVideoInfo" class="family-key-hint">Видео не загружено.</div>
+            </div>
+
+            <div class="admin-card">
+                <h2>Фото профессионального фотографа</h2>
+                <div class="form-actions">
+                    <input type="file" id="photographerImageInput" accept=".jpg,.jpeg,.png,.gif,.webp">
+                    <button type="button" class="btn btn-primary" id="uploadPhotographerBtn">Загрузить фото</button>
+                    <button type="button" class="btn btn-outline" id="reloadPhotographerBtn">Обновить список</button>
+                </div>
+                <div class="admin-images-grid" id="photographerImagesGrid">
+                    <p class="family-members-empty">Фотографий пока нет.</p>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <h2>Фото из семейной галереи</h2>
+                <div class="form-actions" style="margin-top:0;">
+                    <button type="button" class="btn btn-outline" id="reloadFamilyGalleryBtn">Обновить список</button>
+                </div>
+                <div class="admin-images-grid" id="familyGalleryImagesGrid">
+                    <p class="family-members-empty">Фотографий пока нет.</p>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <h2>Семьи</h2>
+                <div class="admin-families" id="adminFamilies">
+                    <p class="family-members-empty">Нет данных. Нажмите "Загрузить данные".</p>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <h2>users_info.txt</h2>
+                <p class="section-subtitle" style="text-align:left; margin-top:0;">Редактирование дополнительного контекста для персонализации приглашений.</p>
+                <textarea class="admin-config" id="usersInfoEditor" placeholder="Введите содержимое users_info.txt"></textarea>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" id="loadUsersInfoBtn">Загрузить users_info</button>
+                    <button type="button" class="btn btn-primary" id="saveUsersInfoBtn">Сохранить users_info</button>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <h2>Сброс базы данных</h2>
+                <p class="section-subtitle" style="text-align:left; margin-top:0;">Удаляет семьи, участников, предпочтения и все загруженные фото семей/фотографа. Конфиг сайта и users_info.txt не затрагиваются.</p>
+                <div class="form-actions" style="margin-top:0;">
+                    <button type="button" class="btn btn-outline" id="resetDatabaseBtn">Очистить базу и фото</button>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <h2>JSON-редактор (резервный)</h2>
+                <p class="section-subtitle" style="text-align:left; margin-top:0;">Для редких правок. Основные блоки лучше редактировать через формы выше.</p>
+                <textarea class="admin-config" id="adminConfigEditor"></textarea>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" id="adminReloadConfigBtn">Перезагрузить JSON</button>
+                    <button type="button" class="btn btn-primary" id="adminSaveConfigBtn">Сохранить JSON</button>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <h2>Генерация пригласительных</h2>
+                <p class="section-subtitle" style="text-align:left; margin-top:0;">Сервис использует файл `users_info` и фоновые изображения из папки `backgrounds` для PDF-приглашений.</p>
+                <div id="invitationSettingsInfo" class="family-key-hint"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"><span class="toast-message"></span></div>
+
+    <script>
+        (function () {
+            const passwordInput = document.getElementById('adminPassword');
+
+            const adminLoadAllBtn = document.getElementById('adminLoadAllBtn');
+            const adminStats = document.getElementById('adminStats');
+            const adminFamilies = document.getElementById('adminFamilies');
+
+            const day1TitleInput = document.getElementById('day1Title');
+            const day2TitleInput = document.getElementById('day2Title');
+            const ceremonyNoteInput = document.getElementById('ceremonyNote');
+            const day1EventsBox = document.getElementById('day1Events');
+            const day2EventsBox = document.getElementById('day2Events');
+            const addDay1EventBtn = document.getElementById('addDay1EventBtn');
+            const addDay2EventBtn = document.getElementById('addDay2EventBtn');
+            const loadTimelineBtn = document.getElementById('loadTimelineBtn');
+            const saveTimelineBtn = document.getElementById('saveTimelineBtn');
+
+            const contentMetaTitle = document.getElementById('contentMetaTitle');
+            const contentMetaDescription = document.getElementById('contentMetaDescription');
+            const contentHashtag = document.getElementById('contentHashtag');
+            const contentGroom = document.getElementById('contentGroom');
+            const contentBride = document.getElementById('contentBride');
+            const contentEventDate = document.getElementById('contentEventDate');
+            const contentEventDateDisplay = document.getElementById('contentEventDateDisplay');
+            const contentStoryTitle = document.getElementById('contentStoryTitle');
+            const contentStoryText = document.getElementById('contentStoryText');
+            const contentLocationName = document.getElementById('contentLocationName');
+            const contentLocationAddress = document.getElementById('contentLocationAddress');
+            const contentDresscodeTitle = document.getElementById('contentDresscodeTitle');
+            const contentDresscodeText = document.getElementById('contentDresscodeText');
+            const contentOrganizerName = document.getElementById('contentOrganizerName');
+            const contentOrganizerPhone = document.getElementById('contentOrganizerPhone');
+            const loadContentBtn = document.getElementById('loadContentBtn');
+            const saveContentBtn = document.getElementById('saveContentBtn');
+
+            const themePrimary = document.getElementById('themePrimary');
+            const themeSecondary = document.getElementById('themeSecondary');
+            const themeAccent = document.getElementById('themeAccent');
+            const themeLightBg = document.getElementById('themeLightBg');
+            const themeDarkBg = document.getElementById('themeDarkBg');
+            const themeDisplayFont = document.getElementById('themeDisplayFont');
+            const themeBodyFont = document.getElementById('themeBodyFont');
+            const loadThemeBtn = document.getElementById('loadThemeBtn');
+            const saveThemeBtn = document.getElementById('saveThemeBtn');
+
+            const galleryEnabled = document.getElementById('galleryEnabled');
+            const galleryLimit = document.getElementById('galleryLimit');
+            const secretVideoEnabled = document.getElementById('secretVideoEnabled');
+            const loadFeaturesBtn = document.getElementById('loadFeaturesBtn');
+            const saveFeaturesBtn = document.getElementById('saveFeaturesBtn');
+
+            const secretVideoInput = document.getElementById('secretVideoInput');
+            const uploadSecretVideoBtn = document.getElementById('uploadSecretVideoBtn');
+            const deleteSecretVideoBtn = document.getElementById('deleteSecretVideoBtn');
+            const reloadSecretVideoBtn = document.getElementById('reloadSecretVideoBtn');
+            const secretVideoInfo = document.getElementById('secretVideoInfo');
+
+            const photographerImageInput = document.getElementById('photographerImageInput');
+            const uploadPhotographerBtn = document.getElementById('uploadPhotographerBtn');
+            const reloadPhotographerBtn = document.getElementById('reloadPhotographerBtn');
+            const photographerImagesGrid = document.getElementById('photographerImagesGrid');
+
+            const reloadFamilyGalleryBtn = document.getElementById('reloadFamilyGalleryBtn');
+            const familyGalleryImagesGrid = document.getElementById('familyGalleryImagesGrid');
+
+            const invitationInfoBoxId = 'invitationSettingsInfo';
+
+            const adminConfigEditor = document.getElementById('adminConfigEditor');
+            const adminReloadConfigBtn = document.getElementById('adminReloadConfigBtn');
+            const adminSaveConfigBtn = document.getElementById('adminSaveConfigBtn');
+
+            const usersInfoEditor = document.getElementById('usersInfoEditor');
+            const loadUsersInfoBtn = document.getElementById('loadUsersInfoBtn');
+            const saveUsersInfoBtn = document.getElementById('saveUsersInfoBtn');
+
+            const resetDatabaseBtn = document.getElementById('resetDatabaseBtn');
+
+            function showToast(message, type = 'success') {
+                const toast = document.getElementById('toast');
+                const toastMessage = toast.querySelector('.toast-message');
+                toastMessage.textContent = message;
+                toast.className = `toast ${type} show`;
+                setTimeout(() => toast.classList.remove('show'), 4000);
+            }
+
+            function getAdminHeaders(extra = {}) {
+                return {
+                    'X-Admin-Password': String(passwordInput.value || '').trim(),
+                    ...extra,
+                };
+            }
+
+            function ensurePassword() {
+                const value = String(passwordInput.value || '').trim();
+                if (!value) {
+                    showToast('Введите пароль администратора.', 'error');
+                    return null;
+                }
+                return value;
+            }
+
+            async function fetchJson(url, options = {}) {
+                const response = await fetch(url, options);
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok || payload.status === 'error') {
+                    throw new Error(payload.message || `HTTP ${response.status}`);
+                }
+                return payload;
+            }
+
+            function roleLabel(role) {
+                const map = {
+                    head: 'Глава семьи',
+                    partner: 'Партнер',
+                    child: 'Ребенок',
+                    guest: 'Гость',
+                    member: 'Участник',
+                };
+                return map[role] || role;
+            }
+
+            function renderStats(stats) {
+                adminStats.innerHTML = `
+                    <div class="admin-stat"><strong>${stats.families_count || 0}</strong><span>Семей</span></div>
+                    <div class="admin-stat"><strong>${stats.members_count || 0}</strong><span>Участников</span></div>
+                    <div class="admin-stat"><strong>${stats.attending_count || 0}</strong><span>Придут</span></div>
+                    <div class="admin-stat"><strong>${stats.preferences_count || 0}</strong><span>Анкет предпочтений</span></div>
+                    <div class="admin-stat"><strong>${stats.family_gallery_images_count || 0}</strong><span>Фото семей</span></div>
+                    <div class="admin-stat"><strong>${stats.photographer_images_count || 0}</strong><span>Фото фотографа</span></div>
+                `;
+            }
+
+            function renderFamilies(families) {
+                if (!Array.isArray(families) || !families.length) {
+                    adminFamilies.innerHTML = '<p class="family-members-empty">Семей пока нет.</p>';
+                    return;
+                }
+
+                adminFamilies.innerHTML = families.map((family) => {
+                    const prefs = family.preferences || {};
+                    const membersHtml = (family.members || []).map((member) => (
+                        `<li>${member.first_name} ${member.second_name} - ${roleLabel(member.role)} - ${member.attending ? 'придет' : 'не придет'}${member.phone ? ` (${member.phone})` : ''}</li>`
+                    )).join('');
+
+                    return `
+                        <div class="admin-family-item">
+                            <h4>${family.head_first_name} ${family.head_second_name}</h4>
+                            <ul>${membersHtml || '<li>Нет участников</li>'}</ul>
+                            <p style="margin-top:8px; color:var(--color-text-muted); font-size:0.9rem;">
+                                <strong>Предпочтения:</strong>
+                                ${prefs.drinks || prefs.music || prefs.food || prefs.notes ?
+                                    `Напитки: ${prefs.drinks || '-'}; Музыка: ${prefs.music || '-'}; Еда: ${prefs.food || '-'}; Дополнительно: ${prefs.notes || '-'}` :
+                                    'не заполнены'}
+                            </p>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            function eventTemplate(day, index, event = {}) {
+                return `
+                    <div class="event-item" data-day="${day}">
+                        <div class="event-item-header">
+                            <span class="event-item-title">Событие ${index + 1}</span>
+                            <button type="button" class="btn btn-outline btn-sm remove-event-btn">Удалить</button>
+                        </div>
+                        <div class="admin-row-3">
+                            <div class="form-group"><label>Смайлик</label><input type="text" class="event-icon" value="${event.icon || ''}" placeholder="🎊"></div>
+                            <div class="form-group"><label>Время</label><input type="text" class="event-time" value="${event.time || ''}" placeholder="16:00"></div>
+                            <div class="form-group"><label>Название</label><input type="text" class="event-title" value="${event.title || ''}" placeholder="Банкет"></div>
+                            <div class="form-group" style="grid-column: 1 / -1;"><label>Описание</label><textarea class="event-description" rows="2" placeholder="Описание события">${event.description || ''}</textarea></div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function renderTimelineEvents(day, events) {
+                const target = day === 1 ? day1EventsBox : day2EventsBox;
+                if (!Array.isArray(events) || !events.length) {
+                    target.innerHTML = '<p class="family-members-empty">Событий пока нет.</p>';
+                    return;
+                }
+
+                target.innerHTML = events.map((event, index) => eventTemplate(day, index, event)).join('');
+            }
+
+            function appendTimelineEvent(day, event = {}) {
+                const target = day === 1 ? day1EventsBox : day2EventsBox;
+                if (target.querySelector('.family-members-empty')) {
+                    target.innerHTML = '';
+                }
+                const index = target.querySelectorAll('.event-item').length;
+                target.insertAdjacentHTML('beforeend', eventTemplate(day, index, event));
+            }
+
+            function collectTimelineEvents(day) {
+                const target = day === 1 ? day1EventsBox : day2EventsBox;
+                const items = Array.from(target.querySelectorAll('.event-item'));
+
+                return items
+                    .map((item) => ({
+                        icon: String(item.querySelector('.event-icon')?.value || '').trim(),
+                        time: String(item.querySelector('.event-time')?.value || '').trim(),
+                        title: String(item.querySelector('.event-title')?.value || '').trim(),
+                        description: String(item.querySelector('.event-description')?.value || '').trim(),
+                    }))
+                    .filter((event) => event.icon || event.time || event.title || event.description);
+            }
+
+            function attachEventItemHandlers(container) {
+                container.addEventListener('click', (e) => {
+                    const btn = e.target.closest('.remove-event-btn');
+                    if (!btn) return;
+                    const item = btn.closest('.event-item');
+                    if (!item) return;
+                    const day = Number(item.dataset.day || 1);
+                    item.remove();
+
+                    const target = day === 1 ? day1EventsBox : day2EventsBox;
+                    const remains = target.querySelectorAll('.event-item');
+                    if (!remains.length) {
+                        target.innerHTML = '<p class="family-members-empty">Событий пока нет.</p>';
+                    } else {
+                        remains.forEach((node, idx) => {
+                            const label = node.querySelector('.event-item-title');
+                            if (label) label.textContent = `Событие ${idx + 1}`;
+                        });
+                    }
+                });
+            }
+
+            function fillThemeForm(theme) {
+                const options = Array.isArray(theme.font_options) ? theme.font_options : [];
+                const optionsHtml = options.map((font) => `<option value="${font}">${font}</option>`).join('');
+                themeDisplayFont.innerHTML = optionsHtml;
+                themeBodyFont.innerHTML = optionsHtml;
+
+                themePrimary.value = theme.primary_color || '';
+                themeSecondary.value = theme.secondary_color || '';
+                themeAccent.value = theme.accent_color || '';
+                themeLightBg.value = theme.light_bg || '';
+                themeDarkBg.value = theme.dark_bg || '';
+                themeDisplayFont.value = theme.display_font || '';
+                themeBodyFont.value = theme.body_font || '';
+            }
+
+            function fillContentForm(content) {
+                contentMetaTitle.value = content.meta_title || '';
+                contentMetaDescription.value = content.meta_description || '';
+                contentHashtag.value = content.hashtag || '';
+                contentGroom.value = content.groom || '';
+                contentBride.value = content.bride || '';
+                contentEventDate.value = content.event_date || '';
+                contentEventDateDisplay.value = content.event_date_display || '';
+                contentStoryTitle.value = content.story_title || '';
+                contentStoryText.value = content.story_text || '';
+                contentLocationName.value = content.location_name || '';
+                contentLocationAddress.value = content.location_address || '';
+                contentDresscodeTitle.value = content.dresscode_title || '';
+                contentDresscodeText.value = content.dresscode_text || '';
+                contentOrganizerName.value = content.organizer_name || '';
+                contentOrganizerPhone.value = content.organizer_phone || '';
+            }
+
+            function renderPhotographerImages(images) {
+                if (!Array.isArray(images) || !images.length) {
+                    photographerImagesGrid.innerHTML = '<p class="family-members-empty">Фотографий пока нет.</p>';
+                    return;
+                }
+
+                photographerImagesGrid.innerHTML = images.map((image) => `
+                    <article class="admin-image-card">
+                        <img src="${image.url}" alt="Фото фотографа" loading="lazy">
+                        <footer>
+                            <span>${image.original_name || image.filename}</span>
+                            <button type="button" class="btn btn-outline btn-sm delete-photographer-image-btn" data-id="${image.id}">Удалить</button>
+                        </footer>
+                    </article>
+                `).join('');
+            }
+
+            function renderFamilyGalleryImages(images) {
+                if (!Array.isArray(images) || !images.length) {
+                    familyGalleryImagesGrid.innerHTML = '<p class="family-members-empty">Фотографий пока нет.</p>';
+                    return;
+                }
+
+                familyGalleryImagesGrid.innerHTML = images.map((image) => `
+                    <article class="admin-image-card">
+                        <img src="${image.url}" alt="Фото семьи" loading="lazy">
+                        <footer>
+                            <span>${image.head_first_name} ${image.head_second_name}</span>
+                            <span>${image.original_name || image.filename}</span>
+                            <button type="button" class="btn btn-outline btn-sm delete-family-image-btn" data-id="${image.id}">Удалить</button>
+                        </footer>
+                    </article>
+                `).join('');
+            }
+
+            async function loadStatsAndFamilies() {
+                const password = ensurePassword();
+                if (!password) return;
+
+                const headers = getAdminHeaders();
+                const [statsResp, familiesResp] = await Promise.all([
+                    fetchJson('/api/admin/stats', { headers }),
+                    fetchJson('/api/admin/families', { headers }),
+                ]);
+                renderStats(statsResp.stats || {});
+                renderFamilies(familiesResp.families || []);
+            }
+
+            async function loadTimeline() {
+                const password = ensurePassword();
+                if (!password) return;
+
+                const resp = await fetchJson('/api/admin/timeline', { headers: getAdminHeaders() });
+                const timeline = resp.timeline || {};
+                day1TitleInput.value = timeline.day1_title || '';
+                day2TitleInput.value = timeline.day2_title || '';
+                ceremonyNoteInput.value = timeline.ceremony_note || '';
+                renderTimelineEvents(1, timeline.day1_events || []);
+                renderTimelineEvents(2, timeline.day2_events || []);
+            }
+
+            async function saveTimeline() {
+                const password = ensurePassword();
+                if (!password) return;
+
+                const payload = {
+                    day1_title: String(day1TitleInput.value || '').trim(),
+                    day2_title: String(day2TitleInput.value || '').trim(),
+                    ceremony_note: String(ceremonyNoteInput.value || '').trim(),
+                    day1_events: collectTimelineEvents(1),
+                    day2_events: collectTimelineEvents(2),
+                };
+
+                await fetchJson('/api/admin/timeline', {
+                    method: 'PUT',
+                    headers: getAdminHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify(payload),
+                });
+                showToast('Программа дня сохранена.', 'success');
+            }
+
+            async function loadTheme() {
+                const password = ensurePassword();
+                if (!password) return;
+
+                const resp = await fetchJson('/api/admin/theme', { headers: getAdminHeaders() });
+                fillThemeForm(resp.theme || {});
+            }
+
+            async function saveTheme() {
+                const password = ensurePassword();
+                if (!password) return;
+
+                const payload = {
+                    primary_color: String(themePrimary.value || '').trim(),
+                    secondary_color: String(themeSecondary.value || '').trim(),
+                    accent_color: String(themeAccent.value || '').trim(),
+                    light_bg: String(themeLightBg.value || '').trim(),
+                    dark_bg: String(themeDarkBg.value || '').trim(),
+                    display_font: String(themeDisplayFont.value || '').trim(),
+                    body_font: String(themeBodyFont.value || '').trim(),
+                };
+
+                await fetchJson('/api/admin/theme', {
+                    method: 'PUT',
+                    headers: getAdminHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify(payload),
+                });
+                showToast('Стилистика обновлена.', 'success');
+            }
+
+            async function loadFeatures() {
+                const password = ensurePassword();
+                if (!password) return;
+
+                const resp = await fetchJson('/api/admin/features', { headers: getAdminHeaders() });
+                const features = resp.features || {};
+                galleryEnabled.value = features.gallery_enabled ? 'true' : 'false';
+                galleryLimit.value = Number(features.gallery_max_uploads_per_family || 12);
+                secretVideoEnabled.value = features.secret_video_enabled ? 'true' : 'false';
+            }
+
+            async function saveFeatures() {
+                const password = ensurePassword();
+                if (!password) return;
+
+                const payload = {
+                    gallery_enabled: galleryEnabled.value === 'true',
+                    gallery_max_uploads_per_family: Number(galleryLimit.value || 12),
+                    secret_video_enabled: secretVideoEnabled.value === 'true',
+                };
+
+                await fetchJson('/api/admin/features', {
+                    method: 'PUT',
+                    headers: getAdminHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify(payload),
+                });
+                showToast('Настройки функций сохранены.', 'success');
+            }
+
+            function renderSecretVideoInfo(secretVideo) {
+                if (!secretVideoInfo) return;
+                if (!secretVideo || !secretVideo.has_video) {
+                    secretVideoInfo.textContent = 'Видео не загружено.';
+                    return;
+                }
+                secretVideoInfo.innerHTML = `
+                    <p><strong>Файл:</strong> ${secretVideo.filename || '-'}</p>
+                    <p><a href="${secretVideo.url}" target="_blank" rel="noopener">Открыть видео</a></p>
+                `;
+            }
+
+            async function loadSecretVideo() {
+                const password = ensurePassword();
+                if (!password) return;
+                const resp = await fetchJson('/api/admin/secret-video', { headers: getAdminHeaders() });
+                renderSecretVideoInfo(resp.secret_video || {});
+            }
+
+            async function uploadSecretVideo() {
+                const password = ensurePassword();
+                if (!password) return;
+
+                const file = secretVideoInput.files[0];
+                if (!file) {
+                    showToast('Выберите видео для загрузки.', 'error');
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('video', file);
+
+                const response = await fetch('/api/admin/secret-video/upload', {
+                    method: 'POST',
+                    headers: getAdminHeaders(),
+                    body: formData,
+                });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok || payload.status === 'error') {
+                    throw new Error(payload.message || `HTTP ${response.status}`);
+                }
+
+                secretVideoInput.value = '';
+                renderSecretVideoInfo(payload.secret_video || {});
+                showToast('Секретное видео загружено.', 'success');
+            }
+
+            async function deleteSecretVideo() {
+                const password = ensurePassword();
+                if (!password) return;
+
+                await fetchJson('/api/admin/secret-video', {
+                    method: 'DELETE',
+                    headers: getAdminHeaders(),
+                });
+                await loadSecretVideo();
+                showToast('Секретное видео удалено.', 'success');
+            }
+
+            async function loadContent() {
+                const password = ensurePassword();
+                if (!password) return;
+
+                const resp = await fetchJson('/api/admin/content', { headers: getAdminHeaders() });
+                fillContentForm(resp.content || {});
+            }
+
+            async function saveContent() {
+                const password = ensurePassword();
+                if (!password) return;
+
+                const payload = {
+                    meta_title: String(contentMetaTitle.value || '').trim(),
+                    meta_description: String(contentMetaDescription.value || '').trim(),
+                    hashtag: String(contentHashtag.value || '').trim(),
+                    groom: String(contentGroom.value || '').trim(),
+                    bride: String(contentBride.value || '').trim(),
+                    event_date: String(contentEventDate.value || '').trim(),
+                    event_date_display: String(contentEventDateDisplay.value || '').trim(),
+                    story_title: String(contentStoryTitle.value || '').trim(),
+                    story_text: String(contentStoryText.value || '').trim(),
+                    location_name: String(contentLocationName.value || '').trim(),
+                    location_address: String(contentLocationAddress.value || '').trim(),
+                    dresscode_title: String(contentDresscodeTitle.value || '').trim(),
+                    dresscode_text: String(contentDresscodeText.value || '').trim(),
+                    organizer_name: String(contentOrganizerName.value || '').trim(),
+                    organizer_phone: String(contentOrganizerPhone.value || '').trim(),
+                };
+
+                await fetchJson('/api/admin/content', {
+                    method: 'PUT',
+                    headers: getAdminHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify(payload),
+                });
+                showToast('Контент сайта обновлен.', 'success');
+            }
+
+            async function loadPhotographerImages() {
+                const password = ensurePassword();
+                if (!password) return;
+
+                const resp = await fetchJson('/api/photographer/images', { headers: getAdminHeaders() });
+                renderPhotographerImages(resp.images || []);
+            }
+
+            async function uploadPhotographerImage() {
+                const password = ensurePassword();
+                if (!password) return;
+
+                const file = photographerImageInput.files[0];
+                if (!file) {
+                    showToast('Выберите фото для загрузки.', 'error');
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('image', file);
+
+                const response = await fetch('/api/admin/photographer/upload', {
+                    method: 'POST',
+                    headers: getAdminHeaders(),
+                    body: formData,
+                });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok || payload.status === 'error') {
+                    throw new Error(payload.message || `HTTP ${response.status}`);
+                }
+
+                photographerImageInput.value = '';
+                renderPhotographerImages(payload.images || []);
+                showToast('Фото фотографа загружено.', 'success');
+            }
+
+            async function deletePhotographerImage(imageId) {
+                const password = ensurePassword();
+                if (!password) return;
+
+                await fetchJson(`/api/admin/photographer/${imageId}`, {
+                    method: 'DELETE',
+                    headers: getAdminHeaders(),
+                });
+                await loadPhotographerImages();
+                showToast('Фото фотографа удалено.', 'success');
+            }
+
+            async function loadFamilyGalleryImages() {
+                const password = ensurePassword();
+                if (!password) return;
+
+                const resp = await fetchJson('/api/admin/family-gallery', { headers: getAdminHeaders() });
+                renderFamilyGalleryImages(resp.images || []);
+            }
+
+            async function deleteFamilyGalleryImage(imageId) {
+                const password = ensurePassword();
+                if (!password) return;
+
+                await fetchJson(`/api/admin/family-gallery/${imageId}`, {
+                    method: 'DELETE',
+                    headers: getAdminHeaders(),
+                });
+                await loadFamilyGalleryImages();
+                showToast('Семейное фото удалено.', 'success');
+            }
+
+            async function loadJsonConfig() {
+                const password = ensurePassword();
+                if (!password) return;
+
+                const resp = await fetchJson('/api/admin/site-config', { headers: getAdminHeaders() });
+                adminConfigEditor.value = JSON.stringify(resp.config || {}, null, 2);
+            }
+
+            async function loadInvitationSettings() {
+                const password = ensurePassword();
+                if (!password) return;
+                const resp = await fetchJson('/api/admin/invitation/settings', { headers: getAdminHeaders() });
+                const invitation = resp.invitation || {};
+                const infoNode = document.getElementById(invitationInfoBoxId);
+                if (!infoNode) return;
+                infoNode.innerHTML = `
+                    <p><strong>users_info:</strong> <code>${invitation.users_info_path || '-'}</code></p>
+                    <p><strong>backgrounds:</strong> <code>${invitation.backgrounds_path || '-'}</code></p>
+                    <p><strong>LLM:</strong> ${invitation.llm_provider || '-'} (${invitation.llm_model || '-'})</p>
+                    <p><strong>SBER_API_KEY:</strong> ${invitation.sber_api_key_set ? 'настроен' : 'не настроен'}</p>
+                `;
+            }
+
+            async function saveJsonConfig() {
+                const password = ensurePassword();
+                if (!password) return;
+
+                let payload;
+                try {
+                    payload = JSON.parse(adminConfigEditor.value || '{}');
+                } catch (error) {
+                    showToast('Некорректный JSON в редакторе.', 'error');
+                    return;
+                }
+
+                await fetchJson('/api/admin/site-config', {
+                    method: 'PUT',
+                    headers: getAdminHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify(payload),
+                });
+                showToast('JSON конфиг сохранен.', 'success');
+            }
+
+            async function loadUsersInfo() {
+                const password = ensurePassword();
+                if (!password) return;
+
+                const resp = await fetchJson('/api/admin/users-info', { headers: getAdminHeaders() });
+                usersInfoEditor.value = typeof resp.users_info === 'string' ? resp.users_info : '';
+            }
+
+            async function saveUsersInfo() {
+                const password = ensurePassword();
+                if (!password) return;
+
+                await fetchJson('/api/admin/users-info', {
+                    method: 'PUT',
+                    headers: getAdminHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({
+                        users_info: String(usersInfoEditor.value || ''),
+                    }),
+                });
+                showToast('users_info.txt сохранен.', 'success');
+            }
+
+            async function resetDatabase() {
+                const password = ensurePassword();
+                if (!password) return;
+
+                const confirmed = window.confirm(
+                    'Очистить базу и удалить фото? Это удалит все семьи, участников, предпочтения и загруженные изображения.'
+                );
+                if (!confirmed) {
+                    return;
+                }
+
+                await fetchJson('/api/admin/database/reset', {
+                    method: 'POST',
+                    headers: getAdminHeaders(),
+                });
+                renderFamilies([]);
+                renderStats({});
+                renderPhotographerImages([]);
+                renderFamilyGalleryImages([]);
+                showToast('База очищена. Сайт запущен с пустыми данными.', 'success');
+            }
+
+            async function loadAll() {
+                if (!ensurePassword()) return;
+
+                adminLoadAllBtn.disabled = true;
+                adminLoadAllBtn.textContent = 'Загрузка...';
+                try {
+                    await Promise.all([
+                        loadStatsAndFamilies(),
+                        loadTimeline(),
+                        loadTheme(),
+                        loadFeatures(),
+                        loadSecretVideo(),
+                        loadContent(),
+                        loadPhotographerImages(),
+                        loadFamilyGalleryImages(),
+                        loadJsonConfig(),
+                        loadUsersInfo(),
+                        loadInvitationSettings(),
+                    ]);
+                    showToast('Все данные загружены.', 'success');
+                } catch (error) {
+                    showToast(error.message || 'Ошибка загрузки данных.', 'error');
+                } finally {
+                    adminLoadAllBtn.disabled = false;
+                    adminLoadAllBtn.textContent = 'Загрузить данные';
+                }
+            }
+
+            attachEventItemHandlers(day1EventsBox);
+            attachEventItemHandlers(day2EventsBox);
+
+            addDay1EventBtn.addEventListener('click', () => appendTimelineEvent(1));
+            addDay2EventBtn.addEventListener('click', () => appendTimelineEvent(2));
+
+            loadTimelineBtn.addEventListener('click', async () => {
+                try {
+                    await loadTimeline();
+                    showToast('Программа загружена.', 'success');
+                } catch (error) {
+                    showToast(error.message || 'Не удалось загрузить программу.', 'error');
+                }
+            });
+
+            saveTimelineBtn.addEventListener('click', async () => {
+                try {
+                    await saveTimeline();
+                } catch (error) {
+                    showToast(error.message || 'Не удалось сохранить программу.', 'error');
+                }
+            });
+
+            loadThemeBtn.addEventListener('click', async () => {
+                try {
+                    await loadTheme();
+                    showToast('Стили загружены.', 'success');
+                } catch (error) {
+                    showToast(error.message || 'Не удалось загрузить стили.', 'error');
+                }
+            });
+
+            saveThemeBtn.addEventListener('click', async () => {
+                try {
+                    await saveTheme();
+                } catch (error) {
+                    showToast(error.message || 'Не удалось сохранить стили.', 'error');
+                }
+            });
+
+            loadFeaturesBtn.addEventListener('click', async () => {
+                try {
+                    await loadFeatures();
+                    showToast('Функции загружены.', 'success');
+                } catch (error) {
+                    showToast(error.message || 'Не удалось загрузить функции.', 'error');
+                }
+            });
+
+            saveFeaturesBtn.addEventListener('click', async () => {
+                try {
+                    await saveFeatures();
+                } catch (error) {
+                    showToast(error.message || 'Не удалось сохранить функции.', 'error');
+                }
+            });
+
+            reloadSecretVideoBtn.addEventListener('click', async () => {
+                try {
+                    await loadSecretVideo();
+                    showToast('Статус секретного видео обновлен.', 'success');
+                } catch (error) {
+                    showToast(error.message || 'Не удалось загрузить статус видео.', 'error');
+                }
+            });
+
+            uploadSecretVideoBtn.addEventListener('click', async () => {
+                try {
+                    await uploadSecretVideo();
+                } catch (error) {
+                    showToast(error.message || 'Не удалось загрузить секретное видео.', 'error');
+                }
+            });
+
+            deleteSecretVideoBtn.addEventListener('click', async () => {
+                try {
+                    await deleteSecretVideo();
+                } catch (error) {
+                    showToast(error.message || 'Не удалось удалить секретное видео.', 'error');
+                }
+            });
+
+            loadContentBtn.addEventListener('click', async () => {
+                try {
+                    await loadContent();
+                    showToast('Контент загружен.', 'success');
+                } catch (error) {
+                    showToast(error.message || 'Не удалось загрузить контент.', 'error');
+                }
+            });
+
+            saveContentBtn.addEventListener('click', async () => {
+                try {
+                    await saveContent();
+                } catch (error) {
+                    showToast(error.message || 'Не удалось сохранить контент.', 'error');
+                }
+            });
+
+            reloadPhotographerBtn.addEventListener('click', async () => {
+                try {
+                    await loadPhotographerImages();
+                    showToast('Список фото фотографа обновлен.', 'success');
+                } catch (error) {
+                    showToast(error.message || 'Не удалось загрузить фото фотографа.', 'error');
+                }
+            });
+
+            uploadPhotographerBtn.addEventListener('click', async () => {
+                try {
+                    await uploadPhotographerImage();
+                } catch (error) {
+                    showToast(error.message || 'Не удалось загрузить фото.', 'error');
+                }
+            });
+
+            reloadFamilyGalleryBtn.addEventListener('click', async () => {
+                try {
+                    await loadFamilyGalleryImages();
+                    showToast('Список семейной галереи обновлен.', 'success');
+                } catch (error) {
+                    showToast(error.message || 'Не удалось загрузить фото семей.', 'error');
+                }
+            });
+
+            photographerImagesGrid.addEventListener('click', async (e) => {
+                const btn = e.target.closest('.delete-photographer-image-btn');
+                if (!btn) return;
+                const imageId = Number(btn.dataset.id || 0);
+                if (!imageId) return;
+                try {
+                    await deletePhotographerImage(imageId);
+                } catch (error) {
+                    showToast(error.message || 'Не удалось удалить фото фотографа.', 'error');
+                }
+            });
+
+            familyGalleryImagesGrid.addEventListener('click', async (e) => {
+                const btn = e.target.closest('.delete-family-image-btn');
+                if (!btn) return;
+                const imageId = Number(btn.dataset.id || 0);
+                if (!imageId) return;
+                try {
+                    await deleteFamilyGalleryImage(imageId);
+                } catch (error) {
+                    showToast(error.message || 'Не удалось удалить семейное фото.', 'error');
+                }
+            });
+
+            adminReloadConfigBtn.addEventListener('click', async () => {
+                try {
+                    await loadJsonConfig();
+                    showToast('JSON загружен.', 'success');
+                } catch (error) {
+                    showToast(error.message || 'Не удалось загрузить JSON.', 'error');
+                }
+            });
+
+            adminSaveConfigBtn.addEventListener('click', async () => {
+                try {
+                    await saveJsonConfig();
+                } catch (error) {
+                    showToast(error.message || 'Не удалось сохранить JSON.', 'error');
+                }
+            });
+
+            loadUsersInfoBtn.addEventListener('click', async () => {
+                try {
+                    await loadUsersInfo();
+                    showToast('users_info загружен.', 'success');
+                } catch (error) {
+                    showToast(error.message || 'Не удалось загрузить users_info.', 'error');
+                }
+            });
+
+            saveUsersInfoBtn.addEventListener('click', async () => {
+                try {
+                    await saveUsersInfo();
+                } catch (error) {
+                    showToast(error.message || 'Не удалось сохранить users_info.', 'error');
+                }
+            });
+
+            resetDatabaseBtn.addEventListener('click', async () => {
+                try {
+                    await resetDatabase();
+                } catch (error) {
+                    showToast(error.message || 'Не удалось очистить базу.', 'error');
+                }
+            });
+
+            adminLoadAllBtn.addEventListener('click', async () => {
+                await loadAll();
+            });
+        })();
+    </script>
+</body>
+</html>

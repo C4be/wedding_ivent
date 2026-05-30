@@ -2,3 +2,8 @@ Flask==3.0.0
 flask-cors==4.0.0
 requests==2.31.0
 gunicorn==21.2.0
+qrcode==8.2
+Pillow==11.2.1
+reportlab==4.4.1
+langchain-gigachat
+langchain-openai

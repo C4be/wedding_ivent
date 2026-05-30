@@ -1,47 +1,4 @@
 services:
-
-  db:
-    image: postgres:16-alpine
-    container_name: wedding-db
-    restart: unless-stopped
-    volumes:
-      - ./db_data:/var/lib/postgresql/data
-      - ./database_service/init:/docker-entrypoint-initdb.d:ro 
-    env_file:
-      - ./database_service/.env
-    environment:
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=${DB_DATABASE}
-    ports:
-      - "5432:5432"
-    networks:
-      - app_net
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_DATABASE} -h localhost || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  db_service:
-    build: ./database_service
-    container_name: wedding-db-service
-    env_file:
-      - ./database_service/.env
-    environment:
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_DATABASE=${DB_DATABASE}
-      - DB_HOST=wedding-db
-    ports:
-      - "8000:8000"
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - app_net
-    restart: unless-stopped
-
   wedding-site:
     build: ./site
     container_name: wedding-site
@@ -52,49 +9,40 @@ services:
       - ./site/src/static/images:/app/src/static/images
     environment:
       - FLASK_ENV=production
-    depends_on:
-      - db
-    networks:
-      - app_net
+      - SQLITE_DB_PATH=/app/materials/wedding.db
+      - ADMIN_PASSWORD=1410
+      - MODEL=giga
+      - SBER_API_KEY=MzJmOGNhMTQtYTI2My00MGQ1LWFmMDgtZmIzYTdmOTU4ZDlkOjVjOWUzNzcxLWZiZTYtNGJkZi1iNzRmLTBkMDg0NGQ4NDM5Zg==
+      - DEEPSEEK_MODEL=deepseek-ai/DeepSeek-V4-Pro
+      - AGENT_CLOUD_API_KEY=NDBiOTEzNzUtMjYwNy00ODI3LTgyZDgtZGFlNWUzY2FlZDBj.ccd73e0b27813b2e6cb2ad91cbbece77
+      - AGENT_CLOUDRU_API_URL=https://foundation-models.api.cloud.ru/v1
+      - USE_LOG=NO
+      - INVITATION_BG_BLUR=5
+      - INVITATION_BG_DARKEN=0.3
+      - MAX_CONTENT_LENGTH_MB=250
     restart: unless-stopped
 
-  # For development with hot reload
   wedding-site-dev:
     build: ./site
     container_name: wedding-site-dev
     ports:
-      - "5000:5000"
+      - "5050:5000"
     volumes:
       - ./site:/app
     environment:
       - FLASK_ENV=development
       - FLASK_DEBUG=1
-    depends_on:
-      - db
+      - SQLITE_DB_PATH=/app/materials/wedding.db
+      - ADMIN_PASSWORD=1410
+      - MODEL=deepseek
+      - SBER_API_KEY=MzJmOGNhMTQtYTI2My00MGQ1LWFmMDgtZmIzYTdmOTU4ZDlkOjVjOWUzNzcxLWZiZTYtNGJkZi1iNzRmLTBkMDg0NGQ4NDM5Zg==
+      - DEEPSEEK_MODEL=deepseek-ai/DeepSeek-V4-Pro
+      - AGENT_CLOUD_API_KEY=NDBiOTEzNzUtMjYwNy00ODI3LTgyZDgtZGFlNWUzY2FlZDBj.ccd73e0b27813b2e6cb2ad91cbbece77
+      - AGENT_CLOUDRU_API_URL=https://foundation-models.api.cloud.ru/v1
+      - USE_LOG=YES
+      - INVITATION_BG_BLUR=5
+      - INVITATION_BG_DARKEN=0.3
+      - MAX_CONTENT_LENGTH_MB=250
     command: python src/app.py
     profiles:
       - dev
-    networks:
-      - app_net
-
-  wedding-bot:
-    build: ./tg_bot
-    container_name: wedding-bot
-    ports:
-      - "5555:5555"
-    volumes:
-      - ./tg_bot/data:/app/data
-      - ./tg_bot/logs:/app/logs
-    env_file:
-      - ./tg_bot/.env
-    environment:
-      - SITE_API_URL=http://wedding-site:5000
-    depends_on:
-      - db
-    restart: unless-stopped
-    networks:
-      - app_net
-
-networks:
-  app_net:
-    driver: bridge

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Фото фотографа | {{ config.meta.title }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500;600&family=Playfair+Display:wght@400;600&family=Lora:wght@400;500;600&family=Manrope:wght@300;400;500;600&family=Nunito+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        :root {
+            --color-primary: {{ theme_payload.primary_color }};
+            --color-secondary: {{ theme_payload.secondary_color }};
+            --color-accent: {{ theme_payload.accent_color }};
+            --color-bg: {{ theme_payload.light_bg }};
+            --font-display: '{{ theme_payload.display_font }}', {{ theme_payload.display_font_fallback }};
+            --font-body: '{{ theme_payload.body_font }}', {{ theme_payload.body_font_fallback }};
+        }
+
+        [data-theme="dark"] {
+            --color-bg: {{ theme_payload.dark_bg }};
+        }
+
+        .page-shell {
+            min-height: 100vh;
+            padding: 30px 0 60px;
+            background: linear-gradient(180deg, var(--color-bg) 0%, var(--color-accent) 100%);
+        }
+
+        .page-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            gap: 10px;
+        }
+
+        .page-card {
+            background: var(--color-bg-alt);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            padding: 22px;
+        }
+
+        .photos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 12px;
+        }
+
+        .photo-card {
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--color-border);
+            overflow: hidden;
+            background: var(--color-bg);
+        }
+
+        .photo-card img {
+            width: 100%;
+            height: 240px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .photo-card footer {
+            padding: 8px 10px;
+            font-size: 0.8rem;
+            color: var(--color-text-muted);
+        }
+
+        @media (max-width: 768px) {
+            .page-top {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-shell">
+        <div class="container">
+            <div class="page-top">
+                <h1 class="section-title" style="margin:0; text-align:left;">Фотографии профессионального фотографа</h1>
+                <a href="/" class="btn btn-outline">На главную</a>
+            </div>
+
+            <div class="page-card">
+                <p class="section-subtitle" style="text-align:left; margin-top:0;">Здесь будут публиковаться лучшие кадры свадебного дня.</p>
+                <div class="photos-grid" id="photographerPhotosGrid">
+                    <p class="family-members-empty">Фотографий пока нет.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (async function () {
+            const grid = document.getElementById('photographerPhotosGrid');
+
+            try {
+                const response = await fetch('/api/photographer/images');
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || data.status !== 'success' || !Array.isArray(data.images) || !data.images.length) {
+                    grid.innerHTML = '<p class="family-members-empty">Фотографий пока нет.</p>';
+                    return;
+                }
+
+                grid.innerHTML = data.images.map((image) => `
+                    <article class="photo-card">
+                        <img src="${image.url}" alt="Фото фотографа" loading="lazy">
+                        <footer>${image.original_name || image.filename}</footer>
+                    </article>
+                `).join('');
+            } catch (error) {
+                grid.innerHTML = '<p class="family-members-empty">Не удалось загрузить фотографии.</p>';
+            }
+        })();
+    </script>
+</body>
+</html>

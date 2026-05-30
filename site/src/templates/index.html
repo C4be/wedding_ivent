@@ -9,7 +9,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Montserrat:wght@300;400;500;600&family=Playfair+Display:wght@400;600&family=Lora:wght@400;500;600&family=Manrope:wght@300;400;500;600&family=Nunito+Sans:wght@300;400;600&display=swap" rel="stylesheet">
     
     <!-- AOS Animation Library -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
@@ -19,6 +19,19 @@
     
     <!-- Styles -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        :root {
+            --color-primary: {{ theme_payload.primary_color }};
+            --color-secondary: {{ theme_payload.secondary_color }};
+            --color-accent: {{ theme_payload.accent_color }};
+            --color-bg: {{ theme_payload.light_bg }};
+            --font-display: '{{ theme_payload.display_font }}', {{ theme_payload.display_font_fallback }};
+            --font-body: '{{ theme_payload.body_font }}', {{ theme_payload.body_font_fallback }};
+        }
+        [data-theme="dark"] {
+            --color-bg: {{ theme_payload.dark_bg }};
+        }
+    </style>
 </head>
 <body>
     <!-- Theme Toggle -->
@@ -59,7 +72,7 @@
                 </div>
             </div>
             
-            <a href="#rsvp" class="btn btn-primary hero-cta">Подтвердить участие</a>
+            <a href="#registration" class="btn btn-primary hero-cta">Подтвердить участие</a>
         </div>
         
         <div class="scroll-indicator">
@@ -81,7 +94,15 @@
                 <li><a href="#timeline">Программа</a></li>
                 <li><a href="#location">Место</a></li>
                 <li><a href="#faq">FAQ</a></li>
-                <li><a href="#rsvp">Анкета</a></li>
+                <li><a href="#registration">Регистрация</a></li>
+                <li><a href="#preferences">Предпочтения</a></li>
+                {% if gallery_settings.gallery_enabled %}
+                <li><a href="/gallery" data-gallery-nav="1">Галерея</a></li>
+                {% endif %}
+                <li><a href="/photographer">Фотограф</a></li>
+                {% if gallery_settings.secret_video_enabled %}
+                <li><a href="/secret_video">Секретное видео</a></li>
+                {% endif %}
             </ul>
         </div>
     </nav>
@@ -89,7 +110,7 @@
     <!-- Story Section -->
     <section class="section story" id="story">
         <div class="container">
-            <div class="story-content" data-aos="fade-up">
+            <div class="story-content story-content-wide" data-aos="fade-up">
                 <h2 class="section-title">{{ config.story.title }}</h2>
                 <div class="section-divider">
                     <span>💕</span>
@@ -111,7 +132,7 @@
                     <div class="slider-dots" id="sliderDots"></div>
                 </div>
                 
-                <p class="story-text">{{ config.story.text }}</p>
+                <p class="story-text story-text-wide">{{ config.story.text }}</p>
             </div>
         </div>
     </section>
@@ -302,118 +323,156 @@
         </div>
     </section>
 
-    <!-- RSVP Section -->
-    <section class="section rsvp" id="rsvp">
+    <!-- Family Registration Section -->
+    <section class="section rsvp" id="registration">
         <div class="container">
-            <h2 class="section-title" data-aos="fade-up">👉 Подтвердите участие 👈</h2>
+            <h2 class="section-title" data-aos="fade-up">👉 Регистрация на ивент 👈</h2>
             <div class="section-divider" data-aos="fade-up">
-                <span>💌</span>
+                <span>👨‍👩‍👧</span>
             </div>
 
-            <form class="rsvp-form" id="rsvpForm" data-aos="fade-up" novalidate>
+            <form class="rsvp-form" id="familyRegistrationForm" data-aos="fade-up" novalidate>
+                <h3 class="rsvp-step-title">Глава семьи</h3>
+                <p class="section-subtitle">По имени и фамилии создаётся или находится ваша семейная группа.</p>
 
-                <!-- Step 1: Main guest info -->
-                <div class="rsvp-step" id="rsvpStep1">
-                    <h3 class="rsvp-step-title">Ваши данные</h3>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="firstName">Имя *</label>
-                            <input type="text" id="firstName" name="first_name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="lastName">Фамилия *</label>
-                            <input type="text" id="lastName" name="last_name" required>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="phone">Телефон *</label>
-                            <input type="text" id="phone" name="phone" required placeholder="+7 (999) 123-45-67">
-                        </div>
-                        <div class="form-group">
-                            <label for="telegram">Telegram *</label>
-                            <input type="text" id="telegram" name="telegram" required placeholder="@username">
-                        </div>
-                    </div>
-
-                    <!-- Attending -->
+                <div class="form-row">
                     <div class="form-group">
-                        <label>Вы придёте? *</label>
-                        <div class="radio-group">
-                            <label class="radio-label">
-                                <input type="radio" name="attending" value="yes" required>
-                                <span class="radio-custom"></span>
-                                ✅ Буду с радостью!
-                            </label>
-                            <label class="radio-label">
-                                <input type="radio" name="attending" value="no">
-                                <span class="radio-custom"></span>
-                                ❌ К сожалению, не смогу
-                            </label>
-                        </div>
+                        <label for="headFirstName">Имя *</label>
+                        <input type="text" id="headFirstName" name="head_first_name" required>
                     </div>
-
-                    <!-- Coming alone? (shown only when attending=yes) -->
-                    <div class="form-group rsvp-with-group" id="rsvpWithGroup" style="display:none">
-                        <label>Придёте один(а) или с кем-то? *</label>
-                        <div class="radio-group">
-                            <label class="radio-label">
-                                <input type="radio" name="with_others" value="alone">
-                                <span class="radio-custom"></span>
-                                🙋 Приду один(а)
-                            </label>
-                            <label class="radio-label">
-                                <input type="radio" name="with_others" value="family">
-                                <span class="radio-custom"></span>
-                                👨‍👩‍👧 Приду с кем-то
-                            </label>
-                        </div>
+                    <div class="form-group">
+                        <label for="headSecondName">Фамилия *</label>
+                        <input type="text" id="headSecondName" name="head_second_name" required>
                     </div>
                 </div>
 
-                <!-- Step 2: Family members (shown when with_others=family) -->
-                <div class="rsvp-family-section" id="rsvpFamilySection" style="display:none">
-                    <h3 class="rsvp-step-title">Сопровождающие</h3>
-                    <div id="familyMembersList"></div>
-                    <button type="button" class="btn btn-outline btn-add-member" id="addFamilyMember">
-                        ➕ Добавить сопровождающего
-                    </button>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="registerFamilyBtn">Найти/создать семейную группу</button>
+                    <button type="button" class="btn btn-outline" id="deleteFamilyBtn">Удалить семейную группу</button>
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-block" id="rsvpSubmitBtn" style="margin-top:24px">
-                    Отправить
-                </button>
+                <p class="family-key-hint" id="familyKeyHint">Сначала найдите или создайте семейную группу.</p>
+
+                <h3 class="rsvp-step-title">Добавить или обновить участника</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="memberFirstName">Имя участника *</label>
+                        <input type="text" id="memberFirstName" name="member_first_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="memberSecondName">Фамилия участника *</label>
+                        <input type="text" id="memberSecondName" name="member_second_name" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="memberRole">Роль</label>
+                        <select id="memberRole" name="member_role">
+                            <option value="member">Гость</option>
+                            <option value="partner">Партнёр</option>
+                            <option value="child">Ребёнок</option>
+                            <option value="guest">Родственник / друг</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="memberPhone">Телефон</label>
+                        <input type="text" id="memberPhone" name="member_phone" placeholder="+7 (999) 123-45-67">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="memberAttending">Присутствует</label>
+                    <select id="memberAttending" name="member_attending">
+                        <option value="yes">Да</option>
+                        <option value="no">Нет</option>
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" id="addFamilyMemberBtn">Добавить / обновить участника</button>
+                </div>
+
+                <div class="family-members-block">
+                    <h4>Текущий состав семьи</h4>
+                    <div id="familyMembersList" class="family-members-list">
+                        <p class="family-members-empty">Список пока пуст.</p>
+                    </div>
+                </div>
             </form>
         </div>
     </section>
 
-    <!-- Questions Section -->
-    <section class="section questions" id="questions">
+    <!-- Preferences Section -->
+    <section class="section questions" id="preferences">
         <div class="container">
-            <h2 class="section-title" data-aos="fade-up">🤔 Остались вопросы?</h2>
+            <h2 class="section-title" data-aos="fade-up">✨ Общие предпочтения семьи</h2>
             <div class="section-divider" data-aos="fade-up">
-                <span>💬</span>
+                <span>🎵</span>
             </div>
-            
-            <form class="question-form" id="questionForm" data-aos="fade-up">
+
+            <form class="question-form" id="preferencesForm" data-aos="fade-up" novalidate>
+                <p class="section-subtitle">Одна анкета на семью: напитки, музыка, еда и другие пожелания.</p>
+
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="qName">Ваше имя</label>
-                        <input type="text" id="qName" name="name">
+                        <label for="prefHeadFirstName">Имя главы семьи *</label>
+                        <input type="text" id="prefHeadFirstName" name="head_first_name" required>
                     </div>
                     <div class="form-group">
-                        <label for="qContact">Контакт для ответа</label>
-                        <input type="text" id="qContact" name="contact" placeholder="Telegram или телефон">
+                        <label for="prefHeadSecondName">Фамилия главы семьи *</label>
+                        <input type="text" id="prefHeadSecondName" name="head_second_name" required>
                     </div>
                 </div>
+
                 <div class="form-group">
-                    <label for="question">Ваш вопрос *</label>
-                    <textarea id="question" name="question" rows="4" required placeholder="Напишите ваш вопрос..."></textarea>
+                    <label for="prefDrinks">Напитки</label>
+                    <textarea id="prefDrinks" name="drinks" rows="3" placeholder="Например: шампанское, сок, минеральная вода"></textarea>
                 </div>
-                <button type="submit" class="btn btn-outline btn-block">Отправить вопрос</button>
+
+                <div class="form-group">
+                    <label for="prefMusic">Музыка</label>
+                    <textarea id="prefMusic" name="music" rows="3" placeholder="Любимые стили, исполнители, песни"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="prefFood">Питание</label>
+                    <textarea id="prefFood" name="food" rows="3" placeholder="Аллергии, ограничения, пожелания"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="prefNotes">Дополнительно</label>
+                    <textarea id="prefNotes" name="notes" rows="4" placeholder="Любые дополнительные комментарии"></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" id="loadPreferencesBtn">Загрузить текущие данные</button>
+                    <button type="submit" class="btn btn-primary" id="savePreferencesBtn">Сохранить предпочтения</button>
+                </div>
             </form>
+        </div>
+    </section>
+
+    <section class="section invitation-download" id="invitation-download">
+        <div class="container">
+            <h2 class="section-title" data-aos="fade-up">Ваше приглашение</h2>
+            <div class="section-divider" data-aos="fade-up">
+                <span>📄</span>
+            </div>
+            <div class="question-form" data-aos="fade-up" style="max-width: 640px;">
+                <p class="section-subtitle">Введите имя и фамилию главы семьи, чтобы скачать персональное PDF-приглашение.</p>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="invitationHeadFirstName">Имя главы семьи</label>
+                        <input type="text" id="invitationHeadFirstName" placeholder="Имя">
+                    </div>
+                    <div class="form-group">
+                        <label for="invitationHeadSecondName">Фамилия главы семьи</label>
+                        <input type="text" id="invitationHeadSecondName" placeholder="Фамилия">
+                    </div>
+                </div>
+                <button type="button" class="btn btn-primary btn-block" id="downloadInvitationBtn">Скачать пригласительное</button>
+            </div>
         </div>
     </section>
 
@@ -440,15 +499,18 @@
                 <p class="footer-date">{{ config.event.date_display }}</p>
                 
                 <div class="footer-contacts">
-                    <p>Организатор: {{ config.contacts.organizer_name }}</p>
-                    <p>{{ config.contacts.organizer_phone }}</p>
-                    <a href="https://t.me/{{ config.contacts.telegram[1:] }}" target="_blank">{{ config.contacts.telegram }}</a>
+                    <a href="mailto:dmitrycube@yandex.ru">dmitrycube@yandex.ru</a>
+                    <a href="https://t.me/C4be74" target="_blank" rel="noopener">@C4be74</a>
                 </div>
-                
-                {% if config.contacts.telegram_channel %}
-                <a href="{{ config.contacts.telegram_channel }}" target="_blank" class="btn btn-outline btn-sm">
-                    Telegram bot
-                </a>
+
+                {% if gallery_settings.gallery_enabled %}
+                <a href="/gallery" class="btn btn-outline btn-sm" style="margin-top:10px;">Семейная галерея</a>
+                {% endif %}
+
+                <a href="/photographer" class="btn btn-outline btn-sm" style="margin-top:10px;">Фото от фотографа</a>
+
+                {% if gallery_settings.secret_video_enabled %}
+                <a href="/secret_video" class="btn btn-outline btn-sm" style="margin-top:10px;">Секретное видео</a>
                 {% endif %}
                 
                 <p class="footer-hashtag">{{ config.couple.hashtag }}</p>
@@ -460,12 +522,12 @@
     <div class="toast" id="toast">
         <span class="toast-message"></span>
     </div>
-
     <!-- Scripts -->
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
         const CONFIG = {
             eventDate: "{{ config.event.date }}T15:00:00",
+            galleryEnabled: {{ 'true' if gallery_settings.gallery_enabled else 'false' }},
             locations: {
                 city: {
                     name: "{{ config.locations.city.name }}",
