@@ -86,6 +86,9 @@ DEFAULT_FEATURES = {
     'gallery_max_uploads_per_family': 12,
     'secret_video_enabled': False,
 }
+DEFAULT_INVITATION = {
+    'site_url': '',
+}
 INVITATION_PAGE_SIZE = (1152, 648)  # 16:9 in points
 
 
@@ -160,6 +163,12 @@ def apply_config_defaults(config: dict) -> tuple[dict, bool]:
     for key, value in DEFAULT_FEATURES.items():
         if key not in features:
             features[key] = value
+            changed = True
+
+    invitation = config.setdefault('invitation', {})
+    for key, value in DEFAULT_INVITATION.items():
+        if key not in invitation:
+            invitation[key] = value
             changed = True
 
     event = config.setdefault('event', {})
@@ -280,6 +289,15 @@ def init_storage() -> None:
 
 def normalize_text(value: str) -> str:
     return ' '.join((value or '').strip().split())
+
+
+def normalize_site_url(value: str) -> str:
+    raw = (value or '').strip()
+    if not raw:
+        return ''
+    if not re.match(r'^https?://', raw, flags=re.IGNORECASE):
+        raw = f'https://{raw}'
+    return raw.rstrip('/')
 
 
 def build_family_key(head_first_name: str, head_second_name: str) -> str:
@@ -428,6 +446,7 @@ def get_admin_content_payload(config: dict) -> dict:
     location = config.get('location', {})
     dresscode = config.get('dresscode', {})
     contacts = config.get('contacts', {})
+    invitation = config.get('invitation', {})
 
     return {
         'meta_title': meta.get('title', ''),
@@ -445,6 +464,7 @@ def get_admin_content_payload(config: dict) -> dict:
         'dresscode_text': dresscode.get('text', ''),
         'organizer_name': contacts.get('organizer_name', ''),
         'organizer_phone': contacts.get('organizer_phone', ''),
+        'invitation_site_url': invitation.get('site_url', ''),
     }
 
 
@@ -456,6 +476,7 @@ def apply_admin_content_payload(config: dict, data: dict) -> None:
     config.setdefault('location', {})
     config.setdefault('dresscode', {})
     config.setdefault('contacts', {})
+    config.setdefault('invitation', {})
     config['contacts'].setdefault('telegram', CONTACT_TELEGRAM)
     config['contacts'].setdefault('telegram_channel', f"https://t.me/{CONTACT_TELEGRAM.lstrip('@')}")
 
@@ -474,6 +495,7 @@ def apply_admin_content_payload(config: dict, data: dict) -> None:
     config['dresscode']['text'] = normalize_text(data.get('dresscode_text', config['dresscode'].get('text', '')))
     config['contacts']['organizer_name'] = normalize_text(data.get('organizer_name', config['contacts'].get('organizer_name', '')))
     config['contacts']['organizer_phone'] = normalize_text(data.get('organizer_phone', config['contacts'].get('organizer_phone', '')))
+    config['invitation']['site_url'] = normalize_site_url(data.get('invitation_site_url', config['invitation'].get('site_url', '')))
 
 
 def ensure_default_contact_links(config: dict) -> None:
@@ -1845,7 +1867,8 @@ def download_family_invitation_pdf():
         text = fallback_invitation_text(config, family, members, recipients)
 
     tg_url = telegram_profile_url(config)
-    site_url = request.url_root.rstrip('/')
+    configured_site_url = normalize_site_url(config.get('invitation', {}).get('site_url', ''))
+    site_url = configured_site_url or request.url_root.rstrip('/')
     pdf_bytes = render_invitation_pdf(config, family, recipients, text, tg_url, site_url)
 
     filename = '♥️ Приглашение на свадьбу.pdf'
@@ -1861,6 +1884,8 @@ def download_family_invitation_pdf():
 @app.route('/api/admin/invitation/settings', methods=['GET'])
 @require_admin
 def admin_get_invitation_settings():
+    config = load_config()
+    configured_site_url = normalize_site_url(config.get('invitation', {}).get('site_url', ''))
     sber_api_key_set = bool(os.environ.get('SBER_API_KEY', '').strip())
     cloud_api_key_set = bool(AGENT_CLOUD_API_KEY)
 
@@ -1886,6 +1911,7 @@ def admin_get_invitation_settings():
                 'agent_cloud_api_key_set': cloud_api_key_set,
                 'agent_cloudru_api_url': AGENT_CLOUDRU_API_URL,
                 'llm_ready': ready,
+                'site_url': configured_site_url,
             },
         }
     )

@@ -196,5 +196,8 @@
     "gallery_enabled": false,
     "gallery_max_uploads_per_family": 12,
     "secret_video_enabled": false
+  },
+  "invitation": {
+    "site_url": ""
   }
 }

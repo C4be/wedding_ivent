@@ -294,6 +294,7 @@
                     <div class="form-group"><label for="contentDresscodeText">Текст дресс-кода</label><textarea id="contentDresscodeText" rows="3"></textarea></div>
                     <div class="form-group"><label for="contentOrganizerName">Организатор</label><input id="contentOrganizerName" type="text"></div>
                     <div class="form-group"><label for="contentOrganizerPhone">Телефон организатора</label><input id="contentOrganizerPhone" type="text"></div>
+                    <div class="form-group"><label for="contentInvitationSiteUrl">Ссылка для QR в приглашении</label><input id="contentInvitationSiteUrl" type="text" placeholder="https://example.com"></div>
                 </div>
                 <div class="form-actions">
                     <button type="button" class="btn btn-outline" id="loadContentBtn">Загрузить контент</button>
@@ -483,6 +484,7 @@
             const contentDresscodeText = document.getElementById('contentDresscodeText');
             const contentOrganizerName = document.getElementById('contentOrganizerName');
             const contentOrganizerPhone = document.getElementById('contentOrganizerPhone');
+            const contentInvitationSiteUrl = document.getElementById('contentInvitationSiteUrl');
             const loadContentBtn = document.getElementById('loadContentBtn');
             const saveContentBtn = document.getElementById('saveContentBtn');
 
@@ -713,6 +715,7 @@
                 contentDresscodeText.value = content.dresscode_text || '';
                 contentOrganizerName.value = content.organizer_name || '';
                 contentOrganizerPhone.value = content.organizer_phone || '';
+                contentInvitationSiteUrl.value = content.invitation_site_url || '';
             }
 
             function renderPhotographerImages(images) {
@@ -942,6 +945,7 @@
                     dresscode_text: String(contentDresscodeText.value || '').trim(),
                     organizer_name: String(contentOrganizerName.value || '').trim(),
                     organizer_phone: String(contentOrganizerPhone.value || '').trim(),
+                    invitation_site_url: String(contentInvitationSiteUrl.value || '').trim(),
                 };
 
                 await fetchJson('/api/admin/content', {
