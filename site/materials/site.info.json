@@ -199,5 +199,9 @@
   },
   "invitation": {
     "site_url": ""
+  },
+  "media_storage": {
+    "family_gallery_root": "/app/src/static/images/family_gallery",
+    "photographer_root": "/app/src/static/images/photographer"
   }
 }

@@ -374,6 +374,26 @@
             </div>
 
             <div class="admin-card">
+                <h2>Хранилище фотографий</h2>
+                <p class="section-subtitle" style="text-align:left; margin-top:0;">Можно указать абсолютный путь (например, дополнительный диск) или путь относительно папки <code>site/</code>.</p>
+                <div class="admin-row">
+                    <div class="form-group">
+                        <label for="familyGalleryRoot">Путь для фото пользователей (семейная галерея)</label>
+                        <input id="familyGalleryRoot" type="text" placeholder="/mnt/photo-disk/family_gallery">
+                    </div>
+                    <div class="form-group">
+                        <label for="photographerRoot">Путь для фото фотографа</label>
+                        <input id="photographerRoot" type="text" placeholder="/mnt/photo-disk/photographer">
+                    </div>
+                </div>
+                <div id="mediaStorageResolvedInfo" class="family-key-hint"></div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-outline" id="loadMediaStorageBtn">Загрузить пути</button>
+                    <button type="button" class="btn btn-primary" id="saveMediaStorageBtn">Сохранить пути</button>
+                </div>
+            </div>
+
+            <div class="admin-card">
                 <h2>Секретное видео</h2>
                 <div class="form-actions">
                     <input type="file" id="secretVideoInput" accept="video/mp4,video/webm,video/quicktime,video/x-msvideo,video/x-m4v">
@@ -503,6 +523,12 @@
             const secretVideoEnabled = document.getElementById('secretVideoEnabled');
             const loadFeaturesBtn = document.getElementById('loadFeaturesBtn');
             const saveFeaturesBtn = document.getElementById('saveFeaturesBtn');
+
+            const familyGalleryRoot = document.getElementById('familyGalleryRoot');
+            const photographerRoot = document.getElementById('photographerRoot');
+            const mediaStorageResolvedInfo = document.getElementById('mediaStorageResolvedInfo');
+            const loadMediaStorageBtn = document.getElementById('loadMediaStorageBtn');
+            const saveMediaStorageBtn = document.getElementById('saveMediaStorageBtn');
 
             const secretVideoInput = document.getElementById('secretVideoInput');
             const uploadSecretVideoBtn = document.getElementById('uploadSecretVideoBtn');
@@ -858,6 +884,43 @@
                 showToast('Настройки функций сохранены.', 'success');
             }
 
+            function renderMediaStorageInfo(mediaStorage) {
+                if (!mediaStorageResolvedInfo) return;
+                mediaStorageResolvedInfo.innerHTML = `
+                    <p><strong>Текущий путь пользователей:</strong> <code>${mediaStorage.family_gallery_root_resolved || '-'}</code></p>
+                    <p><strong>Текущий путь фотографа:</strong> <code>${mediaStorage.photographer_root_resolved || '-'}</code></p>
+                `;
+            }
+
+            async function loadMediaStorage() {
+                const password = ensurePassword();
+                if (!password) return;
+
+                const resp = await fetchJson('/api/admin/media-storage', { headers: getAdminHeaders() });
+                const mediaStorage = resp.media_storage || {};
+                familyGalleryRoot.value = mediaStorage.family_gallery_root || '';
+                photographerRoot.value = mediaStorage.photographer_root || '';
+                renderMediaStorageInfo(mediaStorage);
+            }
+
+            async function saveMediaStorage() {
+                const password = ensurePassword();
+                if (!password) return;
+
+                const payload = {
+                    family_gallery_root: String(familyGalleryRoot.value || '').trim(),
+                    photographer_root: String(photographerRoot.value || '').trim(),
+                };
+
+                const resp = await fetchJson('/api/admin/media-storage', {
+                    method: 'PUT',
+                    headers: getAdminHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify(payload),
+                });
+                renderMediaStorageInfo(resp.media_storage || {});
+                showToast('Пути хранилища сохранены.', 'success');
+            }
+
             function renderSecretVideoInfo(secretVideo) {
                 if (!secretVideoInfo) return;
                 if (!secretVideo || !secretVideo.has_video) {
@@ -1122,6 +1185,7 @@
                         loadTimeline(),
                         loadTheme(),
                         loadFeatures(),
+                        loadMediaStorage(),
                         loadSecretVideo(),
                         loadContent(),
                         loadPhotographerImages(),
@@ -1193,6 +1257,23 @@
                     await saveFeatures();
                 } catch (error) {
                     showToast(error.message || 'Не удалось сохранить функции.', 'error');
+                }
+            });
+
+            loadMediaStorageBtn.addEventListener('click', async () => {
+                try {
+                    await loadMediaStorage();
+                    showToast('Пути хранилища загружены.', 'success');
+                } catch (error) {
+                    showToast(error.message || 'Не удалось загрузить пути хранилища.', 'error');
+                }
+            });
+
+            saveMediaStorageBtn.addEventListener('click', async () => {
+                try {
+                    await saveMediaStorage();
+                } catch (error) {
+                    showToast(error.message || 'Не удалось сохранить пути хранилища.', 'error');
                 }
             });
 

@@ -14,7 +14,7 @@ from functools import wraps
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-from flask import Flask, g, jsonify, render_template, request, send_file
+from flask import Flask, g, jsonify, render_template, request, send_file, send_from_directory
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 
@@ -85,6 +85,10 @@ DEFAULT_FEATURES = {
     'gallery_enabled': True,
     'gallery_max_uploads_per_family': 12,
     'secret_video_enabled': False,
+}
+DEFAULT_MEDIA_STORAGE = {
+    'family_gallery_root': FAMILY_GALLERY_ROOT,
+    'photographer_root': PHOTOGRAPHER_ROOT,
 }
 DEFAULT_INVITATION = {
     'site_url': '',
@@ -169,6 +173,12 @@ def apply_config_defaults(config: dict) -> tuple[dict, bool]:
     for key, value in DEFAULT_INVITATION.items():
         if key not in invitation:
             invitation[key] = value
+            changed = True
+
+    media_storage = config.setdefault('media_storage', {})
+    for key, value in DEFAULT_MEDIA_STORAGE.items():
+        if key not in media_storage or not str(media_storage.get(key, '')).strip():
+            media_storage[key] = value
             changed = True
 
     event = config.setdefault('event', {})
@@ -281,8 +291,8 @@ def init_db() -> None:
 
 
 def init_storage() -> None:
-    os.makedirs(FAMILY_GALLERY_ROOT, exist_ok=True)
-    os.makedirs(PHOTOGRAPHER_ROOT, exist_ok=True)
+    config = load_config()
+    ensure_media_storage_dirs(config)
     os.makedirs(SECRET_VIDEO_ROOT, exist_ok=True)
     os.makedirs(BACKGROUND_ROOT, exist_ok=True)
 
@@ -298,6 +308,46 @@ def normalize_site_url(value: str) -> str:
     if not re.match(r'^https?://', raw, flags=re.IGNORECASE):
         raw = f'https://{raw}'
     return raw.rstrip('/')
+
+
+def resolve_storage_root(value: str, default_root: str) -> str:
+    raw = (value or '').strip()
+    if not raw:
+        return default_root
+    if os.path.isabs(raw):
+        return os.path.abspath(raw)
+    return os.path.abspath(os.path.join(BASE_DIR, '..', raw))
+
+
+def get_media_storage(config: dict | None = None) -> dict:
+    if config is None:
+        config = load_config()
+
+    media_storage = config.get('media_storage', {})
+    family_gallery_root = resolve_storage_root(media_storage.get('family_gallery_root', ''), FAMILY_GALLERY_ROOT)
+    photographer_root = resolve_storage_root(media_storage.get('photographer_root', ''), PHOTOGRAPHER_ROOT)
+    return {
+        'family_gallery_root': family_gallery_root,
+        'photographer_root': photographer_root,
+    }
+
+
+def ensure_media_storage_dirs(config: dict | None = None) -> dict:
+    roots = get_media_storage(config)
+    os.makedirs(roots['family_gallery_root'], exist_ok=True)
+    os.makedirs(roots['photographer_root'], exist_ok=True)
+    return roots
+
+
+def get_media_storage_payload(config: dict) -> dict:
+    configured = config.get('media_storage', {})
+    roots = get_media_storage(config)
+    return {
+        'family_gallery_root': str(configured.get('family_gallery_root', '')).strip(),
+        'photographer_root': str(configured.get('photographer_root', '')).strip(),
+        'family_gallery_root_resolved': roots['family_gallery_root'],
+        'photographer_root_resolved': roots['photographer_root'],
+    }
 
 
 def build_family_key(head_first_name: str, head_second_name: str) -> str:
@@ -375,16 +425,17 @@ def sanitize_timeline_events(events) -> list[dict]:
     return clean
 
 
-def family_gallery_dir(family_id: int) -> str:
-    return os.path.join(FAMILY_GALLERY_ROOT, str(family_id))
+def family_gallery_dir(family_id: int, config: dict | None = None) -> str:
+    roots = get_media_storage(config)
+    return os.path.join(roots['family_gallery_root'], str(family_id))
 
 
 def family_image_url(family_id: int, filename: str) -> str:
-    return f'/static/images/family_gallery/{family_id}/{filename}'
+    return f'/media/family-gallery/{family_id}/{filename}'
 
 
 def photographer_image_url(filename: str) -> str:
-    return f'/static/images/photographer/{filename}'
+    return f'/media/photographer/{filename}'
 
 
 def get_gallery_settings(config: dict) -> dict:
@@ -1342,6 +1393,20 @@ def photographer_page():
     return render_template('photographer.html', config=config, theme_payload=get_theme_payload(config))
 
 
+@app.route('/media/family-gallery/<int:family_id>/<path:filename>')
+def media_family_gallery_file(family_id: int, filename: str):
+    config = load_config()
+    directory = family_gallery_dir(family_id, config)
+    return send_from_directory(directory, filename)
+
+
+@app.route('/media/photographer/<path:filename>')
+def media_photographer_file(filename: str):
+    config = load_config()
+    roots = get_media_storage(config)
+    return send_from_directory(roots['photographer_root'], filename)
+
+
 @app.route('/secret_video')
 def secret_video_page():
     config = load_config()
@@ -1439,6 +1504,9 @@ def delete_family_group():
         return jsonify({'status': 'error', 'message': 'head_first_name and head_second_name are required'}), 400
 
     try:
+        config = load_config()
+        roots = get_media_storage(config)
+
         with get_db_connection() as conn:
             family = get_family_by_head(conn, head_first_name, head_second_name)
             if not family:
@@ -1447,7 +1515,7 @@ def delete_family_group():
             family_id = family['id']
             conn.execute('DELETE FROM families WHERE id = ?', (family_id,))
 
-        gallery_path = family_gallery_dir(family_id)
+        gallery_path = os.path.join(roots['family_gallery_root'], str(family_id))
         if os.path.isdir(gallery_path):
             shutil.rmtree(gallery_path, ignore_errors=True)
 
@@ -1686,6 +1754,7 @@ def get_family_gallery_by_head():
 def upload_family_gallery_image():
     config = load_config()
     settings = get_gallery_settings(config)
+    roots = ensure_media_storage_dirs(config)
     if not settings['gallery_enabled']:
         return jsonify({'status': 'error', 'message': 'Gallery is disabled'}), 404
 
@@ -1725,7 +1794,7 @@ def upload_family_gallery_image():
         ext = Path(original_name).suffix.lower()
         new_name = f"{uuid.uuid4().hex}{ext}"
 
-        target_dir = family_gallery_dir(family['id'])
+        target_dir = os.path.join(roots['family_gallery_root'], str(family['id']))
         os.makedirs(target_dir, exist_ok=True)
         target_path = os.path.join(target_dir, new_name)
         file.save(target_path)
@@ -1755,6 +1824,7 @@ def upload_family_gallery_image():
 def delete_family_gallery_image(image_id: int):
     config = load_config()
     settings = get_gallery_settings(config)
+    roots = get_media_storage(config)
     if not settings['gallery_enabled']:
         return jsonify({'status': 'error', 'message': 'Gallery is disabled'}), 404
 
@@ -1778,7 +1848,7 @@ def delete_family_gallery_image(image_id: int):
 
         conn.execute('DELETE FROM family_gallery_images WHERE id = ?', (image_id,))
 
-        file_path = os.path.join(family_gallery_dir(family['id']), row['filename'])
+        file_path = os.path.join(roots['family_gallery_root'], str(family['id']), row['filename'])
         remove_file_if_exists(file_path)
 
         images = fetch_family_gallery_images(conn, family['id'])
@@ -1803,6 +1873,7 @@ def family_gallery_collage():
 def download_family_gallery_zip():
     config = load_config()
     settings = get_gallery_settings(config)
+    roots = get_media_storage(config)
     if not settings['gallery_enabled']:
         return jsonify({'status': 'error', 'message': 'Gallery is disabled'}), 404
 
@@ -1817,7 +1888,7 @@ def download_family_gallery_zip():
         used_names = set()
 
         for image in images:
-            file_path = os.path.join(family_gallery_dir(image['family_id']), image['filename'])
+            file_path = os.path.join(roots['family_gallery_root'], str(image['family_id']), image['filename'])
             if not os.path.exists(file_path):
                 continue
 
@@ -1886,6 +1957,7 @@ def download_family_invitation_pdf():
 def admin_get_invitation_settings():
     config = load_config()
     configured_site_url = normalize_site_url(config.get('invitation', {}).get('site_url', ''))
+    media_storage = get_media_storage_payload(config)
     sber_api_key_set = bool(os.environ.get('SBER_API_KEY', '').strip())
     cloud_api_key_set = bool(AGENT_CLOUD_API_KEY)
 
@@ -1912,6 +1984,8 @@ def admin_get_invitation_settings():
                 'agent_cloudru_api_url': AGENT_CLOUDRU_API_URL,
                 'llm_ready': ready,
                 'site_url': configured_site_url,
+                'family_gallery_root': media_storage['family_gallery_root_resolved'],
+                'photographer_root': media_storage['photographer_root_resolved'],
             },
         }
     )
@@ -2126,6 +2200,38 @@ def admin_save_content():
     return jsonify({'status': 'success', 'message': 'Content updated', 'content': get_admin_content_payload(config)})
 
 
+@app.route('/api/admin/media-storage', methods=['GET'])
+@require_admin
+def admin_get_media_storage():
+    config = load_config()
+    payload = get_media_storage_payload(config)
+    return jsonify({'status': 'success', 'media_storage': payload})
+
+
+@app.route('/api/admin/media-storage', methods=['PUT'])
+@require_admin
+def admin_save_media_storage():
+    data = request.json or {}
+    if not isinstance(data, dict):
+        return jsonify({'status': 'error', 'message': 'JSON object expected'}), 400
+
+    family_gallery_root = str(data.get('family_gallery_root', '')).strip()
+    photographer_root = str(data.get('photographer_root', '')).strip()
+
+    config = load_config()
+    config.setdefault('media_storage', {})
+    config['media_storage']['family_gallery_root'] = family_gallery_root
+    config['media_storage']['photographer_root'] = photographer_root
+
+    roots = ensure_media_storage_dirs(config)
+    save_config(config)
+
+    payload = get_media_storage_payload(config)
+    payload['family_gallery_root_resolved'] = roots['family_gallery_root']
+    payload['photographer_root_resolved'] = roots['photographer_root']
+    return jsonify({'status': 'success', 'message': 'Media storage updated', 'media_storage': payload})
+
+
 @app.route('/api/admin/users-info', methods=['GET'])
 @require_admin
 def admin_get_users_info():
@@ -2150,6 +2256,9 @@ def admin_save_users_info():
 @app.route('/api/admin/database/reset', methods=['POST'])
 @require_admin
 def admin_reset_database():
+    config = load_config()
+    roots = ensure_media_storage_dirs(config)
+
     with get_db_connection() as conn:
         conn.execute('DELETE FROM photographer_images')
         conn.execute('DELETE FROM families')
@@ -2157,10 +2266,10 @@ def admin_reset_database():
             "DELETE FROM sqlite_sequence WHERE name IN ('families', 'family_members', 'family_preferences', 'family_gallery_images', 'photographer_images')"
         )
 
-    shutil.rmtree(FAMILY_GALLERY_ROOT, ignore_errors=True)
-    shutil.rmtree(PHOTOGRAPHER_ROOT, ignore_errors=True)
-    os.makedirs(FAMILY_GALLERY_ROOT, exist_ok=True)
-    os.makedirs(PHOTOGRAPHER_ROOT, exist_ok=True)
+    shutil.rmtree(roots['family_gallery_root'], ignore_errors=True)
+    shutil.rmtree(roots['photographer_root'], ignore_errors=True)
+    os.makedirs(roots['family_gallery_root'], exist_ok=True)
+    os.makedirs(roots['photographer_root'], exist_ok=True)
 
     return jsonify({'status': 'success', 'message': 'Database cleared. Site data reset to empty state.'})
 
@@ -2184,6 +2293,9 @@ def admin_family_gallery_collage():
 @app.route('/api/admin/family-gallery/<int:image_id>', methods=['DELETE'])
 @require_admin
 def admin_delete_family_gallery_image(image_id: int):
+    config = load_config()
+    roots = get_media_storage(config)
+
     with get_db_connection() as conn:
         row = conn.execute(
             'SELECT id, family_id, filename FROM family_gallery_images WHERE id = ?',
@@ -2193,7 +2305,7 @@ def admin_delete_family_gallery_image(image_id: int):
             return jsonify({'status': 'error', 'message': 'Image not found'}), 404
 
         conn.execute('DELETE FROM family_gallery_images WHERE id = ?', (image_id,))
-        file_path = os.path.join(family_gallery_dir(row['family_id']), row['filename'])
+        file_path = os.path.join(roots['family_gallery_root'], str(row['family_id']), row['filename'])
         remove_file_if_exists(file_path)
 
     return jsonify({'status': 'success', 'message': 'Image deleted'})
@@ -2211,7 +2323,9 @@ def admin_upload_photographer_image():
     original_name = secure_filename(file.filename)
     ext = Path(original_name).suffix.lower()
     new_name = f"{uuid.uuid4().hex}{ext}"
-    target_path = os.path.join(PHOTOGRAPHER_ROOT, new_name)
+    config = load_config()
+    roots = ensure_media_storage_dirs(config)
+    target_path = os.path.join(roots['photographer_root'], new_name)
     file.save(target_path)
 
     now = datetime.utcnow().isoformat()
@@ -2228,6 +2342,9 @@ def admin_upload_photographer_image():
 @app.route('/api/admin/photographer/<int:image_id>', methods=['DELETE'])
 @require_admin
 def admin_delete_photographer_image(image_id: int):
+    config = load_config()
+    roots = get_media_storage(config)
+
     with get_db_connection() as conn:
         row = conn.execute(
             'SELECT id, filename FROM photographer_images WHERE id = ?',
@@ -2237,7 +2354,7 @@ def admin_delete_photographer_image(image_id: int):
             return jsonify({'status': 'error', 'message': 'Image not found'}), 404
 
         conn.execute('DELETE FROM photographer_images WHERE id = ?', (image_id,))
-        file_path = os.path.join(PHOTOGRAPHER_ROOT, row['filename'])
+        file_path = os.path.join(roots['photographer_root'], row['filename'])
         remove_file_if_exists(file_path)
         images = fetch_photographer_images(conn)
 
